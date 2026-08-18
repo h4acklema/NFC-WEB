@@ -1,0 +1,26 @@
+# Configuración de despliegue en Netlify.
+# La web es HTML/CSS/JS estático sin build step: se publica la raíz
+# del repositorio tal cual.
+
+[build]
+  publish = "."
+  command = ""
+
+# Cabeceras de seguridad. Para un negocio que vende ciberseguridad,
+# lo mínimo es que su propia web las tenga.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    # La página solo carga recursos propios y tipografías de Google.
+    Content-Security-Policy = "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'"
+
+# Los assets con nombre fijo se revalidan; el HTML nunca se cachea
+# para que un cambio de precios se vea al momento.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
