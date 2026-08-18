@@ -19,15 +19,6 @@
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /*
-   * Ciclo de la demo del hero: 18s en total, repartidos en 3 tramos
-   * iguales de 6s (33.333% cada uno) — uno por pantalla del móvil
-   * (reseña / wifi / carta). Si se cambia esta duración hay que
-   * recalcular los puntos porcentuales de @keyframes cycleA/B/C y
-   * tagPulse más abajo, que están anclados a 0-33% / 33-66% / 66-100%.
-   */
-  --hero-cycle: 18s;
-
   --radius-s: 8px;
   --radius-m: 16px;
   --radius-l: 28px;
@@ -206,13 +197,10 @@ section {
 
 .hero {
   position: relative;
-  max-width: 1180px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: clamp(2.5rem, 4vw, 5rem) 1.5rem clamp(4rem, 8vw, 7rem);
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  align-items: center;
-  gap: clamp(2rem, 5vw, 4rem);
+  padding: clamp(2.5rem, 4vw, 4rem) 1.5rem clamp(3.5rem, 6vw, 5rem);
+  text-align: center;
 }
 
 .hero__eyebrow {
@@ -226,167 +214,24 @@ section {
 
 .hero__title {
   font-size: clamp(2.2rem, 1.6rem + 2.6vw, 3.6rem);
-  max-width: 14ch;
+  max-width: 16ch;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hero__lead {
   max-width: 46ch;
+  margin-left: auto;
+  margin-right: auto;
   font-size: 1.05rem;
 }
 
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 1rem;
   margin-top: 1.5rem;
-}
-
-/* ---- hero demo: NFC tag + phone mockup ----
- * El tamaño de todo el conjunto se controla desde .scene mediante
- * container queries: .phone define su font-size en cqw (porcentaje
- * del ancho del contenedor .scene) y el resto de medidas internas
- * están en `em`, así el mockup se reescala de forma fluida en
- * cualquier ancho sin recurrir a transform:scale() en breakpoints.
- */
-
-.hero__demo {
-  display: flex;
-  justify-content: center;
-}
-
-.scene {
-  container-type: inline-size;
-  position: relative;
-  width: clamp(200px, 30vw, 300px);
-}
-
-.phone {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 9 / 19;
-  background: var(--ink);
-  border-radius: 1.6em;
-  padding: 0.5em;
-  font-size: 5cqw;
-  box-shadow: var(--shadow-card);
-}
-
-.phone__notch {
-  position: absolute;
-  top: 0.5em;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2.6em;
-  height: 0.45em;
-  background: var(--ink);
-  border-radius: 0 0 0.6em 0.6em;
-  z-index: 2;
-}
-
-.phone__screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 1.2em;
-  background: var(--paper);
-  overflow: hidden;
-}
-
-.screen {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 0.35em;
-  padding: 1.4em 1.1em;
-  opacity: 0;
-  animation-duration: var(--hero-cycle);
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-}
-
-.screen__app {
-  font-family: var(--font-mono);
-  font-size: 0.62em;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin: 0;
-}
-.screen__stars { color: var(--coral); font-size: 1.05em; letter-spacing: 0.1em; }
-.screen__title {
-  font-family: var(--font-serif);
-  font-size: 1.15em;
-  font-weight: 600;
-  color: var(--ink);
-  margin: 0;
-}
-.screen__body { font-size: 0.78em; color: var(--dim); margin: 0; }
-.screen__list { display: flex; flex-direction: column; gap: 0.3em; font-size: 0.78em; color: var(--dim); }
-.screen__list li::before { content: '— '; color: var(--coral); }
-.screen__pill {
-  margin-top: 0.4em;
-  font-family: var(--font-mono);
-  font-size: 0.6em;
-  padding: 0.4em 0.8em;
-  border-radius: 999px;
-  background: var(--teal);
-  color: var(--paper);
-}
-
-/*
- * Sincronización a un ciclo de 18s (--hero-cycle), un tercio por
- * pantalla (0-33% / 33-66% / 66-100%), con un breve fundido en cada
- * extremo del tramo. Si --hero-cycle cambia, estos puntos deben
- * mantenerse proporcionales (33.33% por pantalla).
- */
-.screen--review { animation-name: cycleA; }
-.screen--wifi   { animation-name: cycleB; }
-.screen--menu   { animation-name: cycleC; }
-
-@keyframes cycleA {
-  0%, 2%   { opacity: 0; }
-  4%, 28%  { opacity: 1; }
-  33%, 100% { opacity: 0; }
-}
-@keyframes cycleB {
-  0%, 35%  { opacity: 0; }
-  37%, 61% { opacity: 1; }
-  66%, 100% { opacity: 0; }
-}
-@keyframes cycleC {
-  0%, 68%  { opacity: 0; }
-  70%, 94% { opacity: 1; }
-  100%     { opacity: 0; }
-}
-
-.nfc-tag {
-  position: absolute;
-  right: -8cqw;
-  bottom: 6cqw;
-  width: 24cqw;
-  min-width: 54px;
-  animation: tagPulse var(--hero-cycle) infinite ease-in-out;
-}
-.nfc-tag__body { fill: var(--paper-dim); stroke: var(--line); stroke-width: 2; }
-.nfc-tag__dot { fill: var(--teal); }
-.nfc-tag__wave { fill: none; stroke: var(--coral); stroke-width: 4; stroke-linecap: round; }
-.nfc-tag__wave--1 { opacity: 0.9; }
-.nfc-tag__wave--2 { opacity: 0.6; }
-.nfc-tag__wave--3 { opacity: 0.35; }
-
-/* Un "toque" (escala) al inicio de cada tramo de 6s, en fase con
-   el cambio de pantalla del móvil. */
-@keyframes tagPulse {
-  0%, 1%    { transform: scale(1); }
-  3%        { transform: scale(1.1); }
-  6%, 33%   { transform: scale(1); }
-  35%       { transform: scale(1.1); }
-  38%, 66%  { transform: scale(1); }
-  68%       { transform: scale(1.1); }
-  71%, 100% { transform: scale(1); }
 }
 
 .scroll-arrow {
@@ -663,15 +508,6 @@ section {
 /* ---------- responsive ---------- */
 
 @media (max-width: 900px) {
-  .hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-  .hero__title, .hero__lead { max-width: none; margin-left: auto; margin-right: auto; }
-  .hero__actions { justify-content: center; }
-  .hero__demo { order: -1; }
-  .scene { width: clamp(180px, 46vw, 260px); }
-
   .steps { grid-template-columns: 1fr; }
 }
 
@@ -705,9 +541,8 @@ section {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .screen, .nfc-tag, .scroll-arrow {
+  .scroll-arrow {
     animation: none !important;
   }
-  .screen--review { opacity: 1; }
   .btn:hover { transform: none; }
 }
