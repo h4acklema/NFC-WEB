@@ -187,7 +187,7 @@ const SECTORS = {
  * `when`      → bajo qué circunstancias aplica el punto, según los
  *               servicios marcados y el sector. La lista se rehace
  *               cada vez que cambia la configuración.
- * `coveredBy` → servicio de TOKA que resuelve ese punto. Si está
+ * `coveredBy` → servicio de Gertu que resuelve ese punto. Si está
  *               contratado, el punto cuenta como cubierto y deja de
  *               ser tarea del cliente.
  * ========================================================= */
@@ -285,7 +285,7 @@ const SECURITY_CHECKS = [
   },
 ];
 
-const CONTACTO = 'hola@toka.es';
+const CONTACTO = 'hola@gertu.es';
 const NOTA_IVA = 'Precios sin IVA.';
 const VALIDEZ_DIAS = 30;
 
@@ -335,13 +335,13 @@ function activeChecks() {
   return SECURITY_CHECKS.filter((check) => check.when({ has, sector: currentSector }));
 }
 
-/** Un punto lo cubre TOKA cuando el servicio que lo resuelve está contratado. */
-function isCoveredByToka(check) {
+/** Un punto lo cubre Gertu cuando el servicio que lo resuelve está contratado. */
+function isCoveredByGertu(check) {
   return Boolean(check.coveredBy && selected.has(check.coveredBy));
 }
 
 function checkState(check) {
-  if (isCoveredByToka(check)) return 'toka';
+  if (isCoveredByGertu(check)) return 'gertu';
   return securityDone.has(check.id) ? 'done' : 'pending';
 }
 
@@ -442,11 +442,11 @@ function renderChecklist() {
   checklistEl.innerHTML = checks
     .map((check) => {
       const state = checkState(check);
-      const covered = state === 'toka';
+      const covered = state === 'gertu';
       const servicio = covered ? resolveService(serviceById(check.coveredBy), currentSector) : null;
 
       return `
-        <li class="check${covered ? ' check--toka' : ''}">
+        <li class="check${covered ? ' check--gertu' : ''}">
           <label class="check__label" for="chk-${check.id}">
             <input class="check__box" type="checkbox" id="chk-${check.id}" value="${check.id}"
               ${state !== 'pending' ? 'checked' : ''} ${covered ? 'disabled' : ''}>
@@ -454,7 +454,7 @@ function renderChecklist() {
               <span class="check__main">${esc(check.text)}</span>
               ${
                 covered
-                  ? `<span class="check__toka">Lo cubrimos nosotros con «${esc(servicio.name)}»</span>`
+                  ? `<span class="check__gertu">Lo cubrimos nosotros con «${esc(servicio.name)}»</span>`
                   : `<span class="check__why">${esc(check.why)}</span>`
               }
             </span>
@@ -469,11 +469,11 @@ function renderChecklist() {
 function renderScore() {
   const checks = activeChecks();
   const pendientes = checks.filter((c) => checkState(c) === 'pending');
-  const porToka = checks.filter((c) => checkState(c) === 'toka').length;
+  const porGertu = checks.filter((c) => checkState(c) === 'gertu').length;
   const cubiertos = checks.length - pendientes.length;
 
   const partes = [`${cubiertos} de ${checks.length} cubiertos`];
-  if (porToka) partes.push(`${porToka} con TOKA`);
+  if (porGertu) partes.push(`${porGertu} con Gertu`);
   if (pendientes.length) {
     partes.push(`${pendientes.length} ${pendientes.length === 1 ? 'pendiente' : 'pendientes'}`);
   }
@@ -522,7 +522,7 @@ checklistEl.addEventListener('change', (event) => {
   renderScore();
 });
 
-// "Que se ocupe TOKA": marca la revisión y lleva al configurador.
+// "Que se ocupe Gertu": marca la revisión y lleva al configurador.
 checklistCtaEl.querySelector('button').addEventListener('click', () => {
   selected.add('auditoria');
   update();
@@ -606,7 +606,7 @@ function buildQuote() {
 
   quoteEl.innerHTML = `
     <header class="quote__head">
-      <p class="quote__brand">TOKA</p>
+      <p class="quote__brand">Gertu</p>
       <p class="quote__meta">Presupuesto · ${esc(fecha)}</p>
     </header>
 
@@ -635,7 +635,7 @@ function buildQuote() {
         de la contratación. Los puntos de seguridad proceden de una autoevaluación y no
         constituyen una auditoría.
       </p>
-      <p>¿Lo hablamos? Escríbenos a <strong>${esc(CONTACTO)}</strong> · TOKA, Vitoria-Gasteiz</p>
+      <p>¿Lo hablamos? Escríbenos a <strong>${esc(CONTACTO)}</strong> · Gertu, Vitoria-Gasteiz</p>
     </footer>
   `;
 }
@@ -664,7 +664,7 @@ const descargarEnviarBtn = document.getElementById('descargar-enviar');
 
 function abrirCorreo() {
   const negocio = businessInput.value.trim();
-  const asunto = negocio ? `Presupuesto TOKA — ${negocio}` : 'Presupuesto TOKA';
+  const asunto = negocio ? `Presupuesto Gertu — ${negocio}` : 'Presupuesto Gertu';
 
   window.location.href =
     `mailto:${CONTACTO}` +
@@ -673,7 +673,7 @@ function abrirCorreo() {
 }
 
 /*
- * "Descargar y enviar": el cliente se guarda el PDF y a TOKA le llega
+ * "Descargar y enviar": el cliente se guarda el PDF y a Gertu le llega
  * la misma configuración por correo, para que ninguno de los dos
  * pierda el hilo. El correo se abre con un pequeño retraso porque
  * window.print() bloquea la pestaña hasta que se cierra el diálogo.
@@ -704,7 +704,7 @@ function buildEmailBody() {
   const negocio = businessInput.value.trim();
   const checks = activeChecks();
   const pendientes = checks.filter((c) => checkState(c) === 'pending');
-  const porToka = checks.filter((c) => checkState(c) === 'toka');
+  const porGertu = checks.filter((c) => checkState(c) === 'gertu');
 
   const lineas = [];
 
@@ -729,9 +729,9 @@ function buildEmailBody() {
   lineas.push('', '--- DIAGNÓSTICO DE SEGURIDAD ---');
   lineas.push(`Cubiertos: ${checks.length - pendientes.length} de ${checks.length}`);
 
-  if (porToka.length) {
-    lineas.push('', 'Cubiertos con servicios de TOKA:');
-    porToka.forEach((c) => lineas.push(`- ${c.text}`));
+  if (porGertu.length) {
+    lineas.push('', 'Cubiertos con servicios de Gertu:');
+    porGertu.forEach((c) => lineas.push(`- ${c.text}`));
   }
 
   if (pendientes.length) {
@@ -804,14 +804,14 @@ if (navToggle && navNav) {
 const intro = document.getElementById('intro');
 
 if (intro) {
-  const yaVista = sessionStorage.getItem('toka-intro') === 'visto';
+  const yaVista = sessionStorage.getItem('gertu-intro') === 'visto';
   const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (yaVista || sinMovimiento) {
     intro.remove();
   } else {
     document.body.classList.add('is-intro');
-    sessionStorage.setItem('toka-intro', 'visto');
+    sessionStorage.setItem('gertu-intro', 'visto');
 
     const cerrar = () => {
       document.body.classList.remove('is-intro');

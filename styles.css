@@ -1,5 +1,5 @@
 /* =========================================================
-   TOKA — hoja de estilos
+   Gertu — hoja de estilos
    Sistema de diseño: Fraunces (títulos), Inter (cuerpo),
    JetBrains Mono (precios / datos / etiquetas técnicas)
    Paleta: azul oscuro (marca/CTA), azul medio (acento), blanco/neutros
@@ -42,7 +42,7 @@
 
 /* =========================================================
    CORTINILLA DE ENTRADA
-   TOKA centrado sobre azul, se desvanece y deja la lista de
+   Gertu centrado sobre azul, se desvanece y deja la lista de
    precios. Secuencia completa de 5s, encadenada:
      0,0-1,2s  aparece la palabra (introWord)
      0,6-1,6s  se traza la línea bajo ella (introRule)
@@ -824,13 +824,13 @@ section {
   line-height: 1.4;
 }
 
-/* Punto que resuelve un servicio contratado de TOKA. */
-.check--toka .check__main {
+/* Punto que resuelve un servicio contratado de Gertu. */
+.check--gertu .check__main {
   color: var(--dim);
   text-decoration: line-through;
   text-decoration-color: var(--line);
 }
-.check__toka {
+.check__gertu {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--accent);
