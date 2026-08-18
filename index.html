@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TOKA · Etiquetas NFC para reseñas, wifi y carta digital en Vitoria-Gasteiz</title>
-<meta name="description" content="TOKA digitaliza tu negocio en Vitoria-Gasteiz con una etiqueta NFC: consigue más reseñas en Google, comparte el wifi sin contraseñas y enseña tu carta o catálogo siempre actualizado. Un toque, sin apps.">
-<meta name="keywords" content="NFC Vitoria-Gasteiz, reseñas Google NFC, carta digital, wifi NFC comercio, digitalización negocio local, etiqueta NFC hostelería">
+<title>TOKA · Digitalización NFC y ciberseguridad para comercio en Vitoria-Gasteiz</title>
+<meta name="description" content="Etiquetas NFC para conseguir reseñas en Google, wifi y carta digital, y ciberseguridad para tu establecimiento en Vitoria-Gasteiz. Servicios sueltos, precio transparente y diagnóstico de seguridad gratuito.">
+<meta name="keywords" content="ciberseguridad comercios Vitoria-Gasteiz, seguridad informática hostelería, NFC Vitoria-Gasteiz, reseñas Google NFC, wifi seguro red invitados, carta digital, digitalización negocio local">
 <meta name="robots" content="index, follow">
 <meta name="author" content="TOKA">
 <meta name="theme-color" content="#0d3b66">
@@ -15,15 +15,15 @@
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_ES">
 <meta property="og:site_name" content="TOKA">
-<meta property="og:title" content="TOKA · Etiquetas NFC para reseñas, wifi y carta digital">
-<meta property="og:description" content="Un toque y tu cliente deja una reseña en Google, se conecta al wifi o ve tu carta digital. Digitalización NFC para comercio local en Vitoria-Gasteiz.">
+<meta property="og:title" content="TOKA · Digitalización NFC y ciberseguridad para comercio local">
+<meta property="og:description" content="Reseñas en Google, wifi y carta digital con un toque NFC, y la seguridad de tu establecimiento revisada por un ingeniero en ciberseguridad.">
 <meta property="og:url" content="https://toka.link/">
 <meta property="og:image" content="https://toka.link/og-image.jpg">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="TOKA · Etiquetas NFC para comercio local">
-<meta name="twitter:description" content="Reseñas, wifi y carta digital con un solo toque NFC. Digitalización para comercio local en Vitoria-Gasteiz.">
+<meta name="twitter:title" content="TOKA · NFC y ciberseguridad para comercio local">
+<meta name="twitter:description" content="Reseñas, wifi y carta digital con un toque NFC. Y la seguridad de tu negocio, revisada por un ingeniero en ciberseguridad.">
 <meta name="twitter:image" content="https://toka.link/og-image.jpg">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d3b66'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='30' fill='%23ffffff' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
@@ -39,7 +39,7 @@
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   "name": "TOKA",
-  "description": "Digitalización NFC para comercio local: reseñas de Google, wifi y carta digital mediante etiquetas NFC físicas.",
+  "description": "Digitalización NFC y ciberseguridad para comercio local: reseñas de Google, wifi, carta digital, revisión de seguridad del establecimiento y formación al equipo.",
   "areaServed": {
     "@type": "City",
     "name": "Vitoria-Gasteiz"
@@ -52,7 +52,13 @@
   },
   "email": "hola@toka.es",
   "url": "https://toka.link/",
-  "priceRange": "€€"
+  "priceRange": "€€",
+  "knowsAbout": [
+    "Ciberseguridad para pequeño comercio",
+    "Segmentación de redes wifi y TPV",
+    "Protección de datos y RGPD",
+    "Etiquetas NFC"
+  ]
 }
 </script>
 </head>
@@ -61,11 +67,14 @@
 <!--
   Cortinilla de entrada. La animación CSS termina con la capa oculta
   (animation-fill-mode: forwards), así que desaparece sola aunque el
-  JS falle; el JS solo la retira del DOM y libera el scroll.
+  JS falle; el JS solo la retira del DOM, libera el scroll y permite
+  saltarla con un clic o una tecla.
 -->
 <div class="intro" id="intro" role="presentation">
   <p class="intro__word">TOKA</p>
   <span class="intro__rule"></span>
+  <p class="intro__claim">Digitalización y ciberseguridad para comercio local</p>
+  <p class="intro__skip">Pulsa para entrar</p>
 </div>
 
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -83,7 +92,7 @@
     <nav class="nav__nav" aria-label="Principal">
       <ul class="nav__links" id="nav-links">
         <li><a href="#packs">Precios</a></li>
-        <li><a href="#como">Cómo funciona</a></li>
+        <li><a href="#seguridad">Ciberseguridad</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#contacto" class="nav__cta">Contacto</a></li>
       </ul>
@@ -95,9 +104,9 @@
 
   <section class="packs" id="packs" aria-label="Precios y configurador">
     <div class="section-head section-head--hero">
-      <p class="section-eyebrow">Digitalización NFC · Vitoria-Gasteiz</p>
+      <p class="section-eyebrow">Digitalización y ciberseguridad · Vitoria-Gasteiz</p>
       <h1>Paga solo por lo que necesitas</h1>
-      <p class="section-lead">Marca los servicios que quieres y mira cómo cambia el precio. Cuando lo tengas, descárgate el presupuesto en PDF.</p>
+      <p class="section-lead">Marca los servicios que quieres y mira cómo cambia el precio. Cuando lo tengas, descárgate el presupuesto y nos llega una copia.</p>
     </div>
 
     <div class="tabs" role="tablist" aria-label="Sectores">
@@ -127,14 +136,68 @@
         </div>
 
         <label class="summary__field" for="negocio">
-          Nombre de tu negocio <span>(para el PDF)</span>
+          Nombre de tu negocio
           <input type="text" id="negocio" placeholder="Bar Zuria" autocomplete="organization">
         </label>
 
-        <button type="button" class="btn btn--primary summary__cta" id="generar-pdf">Descargar presupuesto en PDF</button>
+        <label class="summary__field" for="email">
+          Tu email <span>(para que podamos responderte)</span>
+          <input type="email" id="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </label>
 
-        <p class="summary__note">Precios sin IVA. Descargarlo no te compromete a nada.</p>
+        <button type="button" class="btn btn--primary summary__cta" id="descargar-enviar">Descargar y enviar</button>
+
+        <p class="summary__note" id="summary-status">Te descargas el PDF y nos llega una copia a nosotros, para no perder el hilo.</p>
       </aside>
+    </div>
+  </section>
+
+  <section class="seguridad" id="seguridad" aria-label="Ciberseguridad">
+    <div class="section-head">
+      <p class="section-eyebrow">Ciberseguridad</p>
+      <h2>Digitalizar sin dejar la puerta abierta</h2>
+      <p class="section-lead">
+        Detrás de TOKA hay un <strong>ingeniero en ciberseguridad</strong>. Por eso no nos limitamos a
+        montarte la tarjeta: revisamos que lo que ya tienes en el local no sea un problema.
+      </p>
+    </div>
+
+    <div class="seguridad-grid">
+
+      <div class="seguridad-intro">
+        <h3>Por qué importa en un negocio pequeño</h3>
+        <p>
+          El comercio local se cree fuera del radar, y es justo al revés: los ataques no se eligen
+          a mano, se lanzan en masa contra quien tiene el router como vino de fábrica y el TPV en
+          la misma red que el wifi de los clientes.
+        </p>
+        <p>
+          No hace falta un departamento de informática. Hacen falta cuatro cosas bien puestas,
+          y saber cuáles son las tuyas.
+        </p>
+
+        <ul class="seguridad-list">
+          <li><strong>Revisión del local</strong> — router, red, dispositivos y cuentas, con informe.</li>
+          <li><strong>Wifi seguro</strong> — la red de clientes, separada de tus cobros.</li>
+          <li><strong>Formación al equipo</strong> — el fraude entra por las personas, no por los servidores.</li>
+          <li><strong>Copias y vigilancia</strong> — que exista una copia y que alguien mire cada mes.</li>
+        </ul>
+      </div>
+
+      <div class="checklist" aria-labelledby="checklist-title">
+        <h3 class="checklist__title" id="checklist-title">Diagnóstico gratuito</h3>
+        <p class="checklist__intro" id="checklist-context"></p>
+
+        <ul class="checklist__items" id="checklist-items"></ul>
+
+        <p class="checklist__score" id="checklist-score" aria-live="polite"></p>
+
+        <div class="checklist__cta" id="checklist-cta" hidden>
+          <p class="checklist__cta-text"></p>
+          <button type="button" class="btn btn--primary">Añadir la revisión al presupuesto</button>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -206,6 +269,14 @@
         <p>En Android sí, la conexión es automática con el toque. En iPhone, Apple no permite conectar a redes wifi por NFC de forma automática: el toque abre igualmente tu microsite, con el nombre de la red y la contraseña listos para copiar, sin tener que teclearlos a mano.</p>
       </details>
       <details class="accordion__item">
+        <summary>¿Mi negocio es demasiado pequeño para preocuparse por la ciberseguridad?</summary>
+        <p>Al contrario. Los ataques al comercio pequeño no son dirigidos: son automáticos, y buscan precisamente el router con la clave de fábrica o el TPV compartiendo red con el wifi de clientes. Precisamente por ser pequeño, un incidente de un par de días sin cobrar hace mucho más daño.</p>
+      </details>
+      <details class="accordion__item">
+        <summary>¿La revisión de seguridad interrumpe el negocio?</summary>
+        <p>No. Se hace en horario que acordemos, normalmente fuera de las horas fuertes, y la mayoría de cambios (red de invitados, contraseñas, copias) no obligan a cerrar ni a parar los cobros.</p>
+      </details>
+      <details class="accordion__item">
         <summary>No tengo web. ¿Me hace falta una para usar la etiqueta?</summary>
         <p>No. Con la etiqueta ya recibes una página propia, sencilla, con lo que necesites (reseñas, wifi, carta). Y si además quieres una web completa de tu negocio, con tus servicios, horario y contacto, puedes añadirla como servicio en el configurador de arriba.</p>
       </details>
@@ -214,38 +285,30 @@
         <p>Sí. Tu página es editable: puedes actualizar tu carta, tus datos de wifi o el enlace de reseñas cuando lo necesites, sin volver a programar la etiqueta física. Si prefieres no ocuparte tú, añade el servicio de mantenimiento y lo hacemos nosotros.</p>
       </details>
       <details class="accordion__item">
-        <summary>¿Cuánto tarda en llegar la etiqueta NFC?</summary>
-        <p>Preparamos y programamos tu etiqueta en los días posteriores a la contratación. Te avisamos por email en cuanto está lista para enviar.</p>
-      </details>
-      <details class="accordion__item">
-        <summary>La cuota mensual de mantenimiento, ¿tiene permanencia?</summary>
-        <p>No. Puedes darte de baja cuando quieras, y tu etiqueta y tu página siguen funcionando igual: lo que dejas de tener es que nos ocupemos nosotros de los cambios.</p>
+        <summary>Las cuotas mensuales, ¿tienen permanencia?</summary>
+        <p>No. Puedes darte de baja cuando quieras, y tu etiqueta y tu página siguen funcionando igual: lo que dejas de tener es que nos ocupemos nosotros de los cambios y de la vigilancia.</p>
       </details>
     </div>
   </section>
 
-  <section class="contacto" id="contacto" aria-label="Contacto y diagnóstico de seguridad">
-    <div class="section-head">
-      <p class="section-eyebrow">Hablemos</p>
-      <h2>Cuéntanos tu caso</h2>
-      <p class="section-lead">Antes de escribirnos, repasa el diagnóstico de seguridad: cambia según los servicios que hayas marcado arriba, y se envía con tu mensaje.</p>
-    </div>
-
-    <div class="contact-grid">
-
-      <div class="checklist" aria-labelledby="checklist-title">
-        <h3 class="checklist__title" id="checklist-title">Diagnóstico de seguridad de tu establecimiento</h3>
-        <p class="checklist__intro" id="checklist-context"></p>
-
-        <ul class="checklist__items" id="checklist-items"></ul>
-
-        <p class="checklist__score" id="checklist-score" aria-live="polite"></p>
+  <section class="contacto" id="contacto" aria-label="Contacto">
+    <div class="contacto__inner">
+      <div class="contacto__text">
+        <p class="section-eyebrow">Hablemos</p>
+        <h2>¿Tienes dudas antes de decidir?</h2>
+        <p>
+          Escríbenos y te respondemos sin compromiso. Si ya has configurado tu presupuesto arriba,
+          se envía contigo el mensaje, junto con los puntos de seguridad que te queden pendientes.
+        </p>
+        <p class="contacto__direct">
+          O directamente a <a href="mailto:hola@toka.es">hola@toka.es</a>
+        </p>
       </div>
 
       <form class="contact-form" id="contact-form" novalidate>
-        <label class="field" for="email">
+        <label class="field" for="email-contacto">
           Tu email
-          <input type="email" id="email" name="email" required placeholder="tucorreo@ejemplo.com" autocomplete="email">
+          <input type="email" id="email-contacto" name="email" required placeholder="tucorreo@ejemplo.com" autocomplete="email">
         </label>
 
         <label class="field" for="telefono">
@@ -261,17 +324,19 @@
         <button type="submit" class="btn btn--primary contact-form__cta">Enviar a hola@toka.es</button>
 
         <p class="contact-form__note" id="form-status">
-          Se abrirá tu programa de correo con el presupuesto y el diagnóstico ya escritos. Repasa el mensaje antes de enviarlo.
+          Se abrirá tu programa de correo con todo escrito. Repasa el mensaje antes de enviarlo.
         </p>
       </form>
-
     </div>
   </section>
 
 </main>
 
 <footer class="footer">
-  <p class="footer__legal">© 2026 TOKA · Vitoria-Gasteiz · <a href="mailto:hola@toka.es">hola@toka.es</a></p>
+  <p class="footer__legal">
+    © 2026 TOKA · Vitoria-Gasteiz · Ingeniería en ciberseguridad ·
+    <a href="mailto:hola@toka.es">hola@toka.es</a>
+  </p>
 </footer>
 
 <!-- Presupuesto: oculto en pantalla, es lo único que se imprime/guarda como PDF. -->
