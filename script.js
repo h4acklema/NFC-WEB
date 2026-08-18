@@ -18,7 +18,6 @@ const SECTORS = {
         'Etiqueta NFC física',
         'Enlace directo a reseñas de Google',
         'Microsite básico de tu negocio',
-        'Código QR de respaldo',
       ],
     },
     {
@@ -68,7 +67,6 @@ const SECTORS = {
         'Etiqueta NFC física',
         'Enlace directo a reseñas de Google',
         'Microsite básico de tu negocio',
-        'Código QR de respaldo',
       ],
     },
     {
@@ -118,7 +116,6 @@ const SECTORS = {
         'Etiqueta NFC física',
         'Enlace directo a reseñas de Google',
         'Microsite básico de tu alojamiento',
-        'Código QR de respaldo',
       ],
     },
     {
@@ -168,7 +165,6 @@ const SECTORS = {
         'Etiqueta NFC física',
         'Enlace directo a reseñas de Google',
         'Microsite básico de tu tienda',
-        'Código QR de respaldo',
       ],
     },
     {
