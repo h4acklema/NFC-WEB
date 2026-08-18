@@ -12,7 +12,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Para empezar a sumar reseñas hoy mismo.',
-      price: '19 €',
+      price: '25 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -23,18 +23,18 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Reseñas + wifi sin contraseñas que teclear.',
-      price: '35 €',
+      price: '45 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
-        'Conexión a wifi con un toque',
+        'Wifi: conexión automática en Android, red y clave listas para copiar en iPhone',
         'Panel para editar la red y clave',
       ],
     },
     {
       name: 'Completo',
       desc: 'Tu carta siempre actualizada, sin reimprimir.',
-      price: '59 €',
+      price: '75 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -46,8 +46,8 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu marca y soporte continuo.',
-      price: '89 €',
-      priceNote: 'pago único + 9 €/mes',
+      price: '120 €',
+      priceNote: 'pago único + 12 €/mes',
       badge: 'Más completo',
       features: [
         'Todo lo del pack Completo',
@@ -61,7 +61,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Consigue más reseñas tras cada cita.',
-      price: '19 €',
+      price: '25 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -72,18 +72,18 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Reseñas + wifi para la sala de espera.',
-      price: '35 €',
+      price: '45 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
-        'Conexión a wifi con un toque',
+        'Wifi: conexión automática en Android, red y clave listas para copiar en iPhone',
         'Panel para editar la red y clave',
       ],
     },
     {
       name: 'Completo',
       desc: 'Catálogo de servicios y precios siempre al día.',
-      price: '59 €',
+      price: '75 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -95,8 +95,8 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu marca y soporte continuo.',
-      price: '89 €',
-      priceNote: 'pago único + 9 €/mes',
+      price: '120 €',
+      priceNote: 'pago único + 12 €/mes',
       badge: 'Más completo',
       features: [
         'Todo lo del pack Completo',
@@ -110,7 +110,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Más reseñas al final de cada estancia.',
-      price: '19 €',
+      price: '25 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -121,18 +121,18 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Wifi al instante desde la entrada.',
-      price: '35 €',
+      price: '45 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
-        'Conexión a wifi con un toque',
+        'Wifi: conexión automática en Android, red y clave listas para copiar en iPhone',
         'Panel para editar la red y clave',
       ],
     },
     {
       name: 'Completo',
       desc: 'Guía digital del huésped, siempre actualizada.',
-      price: '59 €',
+      price: '75 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -144,8 +144,8 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu alojamiento y soporte continuo.',
-      price: '89 €',
-      priceNote: 'pago único + 9 €/mes',
+      price: '120 €',
+      priceNote: 'pago único + 12 €/mes',
       badge: 'Más completo',
       features: [
         'Todo lo del pack Completo',
@@ -159,7 +159,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Convierte cada venta en una reseña.',
-      price: '19 €',
+      price: '25 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -170,18 +170,18 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Reseñas + wifi para tus clientes en tienda.',
-      price: '35 €',
+      price: '45 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
-        'Conexión a wifi con un toque',
+        'Wifi: conexión automática en Android, red y clave listas para copiar en iPhone',
         'Panel para editar la red y clave',
       ],
     },
     {
       name: 'Completo',
       desc: 'Catálogo digital de productos, siempre al día.',
-      price: '59 €',
+      price: '75 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -193,8 +193,8 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu marca y soporte continuo.',
-      price: '89 €',
-      priceNote: 'pago único + 9 €/mes',
+      price: '120 €',
+      priceNote: 'pago único + 12 €/mes',
       badge: 'Más completo',
       features: [
         'Todo lo del pack Completo',
