@@ -533,6 +533,27 @@ section {
   font-weight: 500;
 }
 
+.tags-summary {
+  background: var(--paper-dim);
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.1rem 1.3rem;
+}
+.tags-summary__detail {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.service__quote {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dim);
+}
+
 .qty__tiers {
   display: flex;
   flex-wrap: wrap;
@@ -1436,4 +1457,67 @@ section {
     color: #5a6b7d;
     margin: 0 0 0.3rem;
   }
+}
+
+/* ---- formatos de etiqueta ---- */
+
+.formats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.formats__legend {
+  padding: 0 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.format {
+  display: flex;
+  gap: 0.55rem;
+  align-items: start;
+  padding: 0.75rem 0.85rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-s);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.format:hover { border-color: var(--accent); }
+.format--on {
+  border-color: var(--blue);
+  background: var(--paper-dim);
+}
+
+.format input {
+  margin: 0.15rem 0 0;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+.format__text { display: flex; flex-direction: column; gap: 0.15rem; }
+
+.format__name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.format__name em {
+  display: block;
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.format__desc {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--dim);
 }

@@ -29,10 +29,12 @@ const SERVICES = [
     id: 'nfc',
     group: 'nfc',
     name: 'Etiqueta NFC + reseñas en Google',
-    desc: 'Tu página con enlace directo a tus reseñas y la primera tarjeta física ya programada. Es la base de todo lo demás.',
+    desc: 'Tu página con enlace directo a tus reseñas y la primera tarjeta ya programada. Es la base de todo lo demás.',
     price: 25,
     unit: 'once',
     required: true,
+    taggable: true,
+    tagHint: 'donde pides la reseña: barra, salida, junto al datáfono…',
   },
   {
     id: 'wifi',
@@ -49,6 +51,8 @@ const SERVICES = [
     desc: 'Tu carta con precios, editable siempre que quieras sin volver a imprimir nada.',
     price: 30,
     unit: 'once',
+    taggable: true,
+    tagHint: 'una por mesa',
   },
   {
     id: 'web',
@@ -83,46 +87,26 @@ const SERVICES = [
     unit: 'month',
   },
 
-  /* ---- ciberseguridad ---- */
+  /* ---- ciberseguridad ----
+   * Dos pasos: un informe a precio cerrado y, a partir de lo que
+   * aparezca en él, la implantación. Esta última no lleva precio en la
+   * web a propósito: hasta ver el local no se sabe el alcance, y poner
+   * una cifra antes de mirar es comprometerse a ciegas.
+   */
   {
-    id: 'auditoria',
+    id: 'informe',
     group: 'seguridad',
-    name: 'Revisión de seguridad del local',
-    desc: 'Vamos a tu negocio, revisamos router, red, dispositivos y cuentas, y te dejamos un informe con lo que hay que arreglar y en qué orden.',
-    price: 90,
+    name: 'Informe de seguridad',
+    desc: 'Vamos a tu negocio y revisamos router, redes, TPV, dispositivos y cuentas. Te entregamos un informe escrito con todo lo que hay que arreglar, ordenado por urgencia y explicado sin tecnicismos.',
+    price: 200,
     unit: 'once',
   },
   {
-    id: 'wifiseguro',
+    id: 'implantacion',
     group: 'seguridad',
-    name: 'Wifi seguro con red de invitados',
-    desc: 'Configuramos una red para clientes separada de la del TPV y la caja, con cifrado actual y contraseña de administración propia.',
-    price: 70,
-    unit: 'once',
-  },
-  {
-    id: 'formacion',
-    group: 'seguridad',
-    name: 'Formación al equipo',
-    desc: 'Una sesión práctica con tu personal: correos falsos, estafas del falso proveedor, contraseñas y qué hacer si algo se tuerce.',
-    price: 60,
-    unit: 'once',
-  },
-  {
-    id: 'backups',
-    group: 'seguridad',
-    name: 'Copias de seguridad automáticas',
-    desc: 'Dejamos configuradas copias de tu web y tus datos, y comprobamos que se pueden restaurar de verdad.',
-    price: 50,
-    unit: 'once',
-  },
-  {
-    id: 'vigilancia',
-    group: 'seguridad',
-    name: 'Vigilancia y soporte de seguridad',
-    desc: 'Revisamos cada mes que todo siga actualizado y al día, y nos tienes a mano si sospechas de algo. Sin permanencia.',
-    price: 19,
-    unit: 'month',
+    name: 'Implantación de las medidas',
+    desc: 'Dejamos resuelto lo que salga en el informe: separar la red de clientes del TPV, contraseñas, copias de seguridad y formación de tu equipo. El precio depende de lo que haya que hacer, así que se presupuesta al entregar el informe.',
+    unit: 'quote',
   },
 ];
 
@@ -143,6 +127,30 @@ const SERVICES = [
  * La primera etiqueta va incluida en el servicio base, así que estos
  * tramos cuentan a partir de la segunda.
  * ========================================================= */
+
+/*
+ * Formatos físicos. El chip NFC es el mismo en todos; lo que cambia es
+ * el soporte, y por eso el suplemento es fijo por unidad y NO baja con
+ * el volumen: imprimir muchas tarjetas abarata la tarjeta, pero una
+ * peana sigue costando lo que cuesta.
+ */
+const TAG_FORMATS = {
+  pegatina: {
+    name: 'Pegatina',
+    desc: 'Adhesiva y discreta. Para el portacuentas, la barra o el cristal.',
+    delta: -2,
+  },
+  tarjeta: {
+    name: 'Tarjeta',
+    desc: 'Tamaño tarjeta de crédito, rígida. La que se da en mano con la cuenta.',
+    delta: 0,
+  },
+  soporte: {
+    name: 'Soporte de mesa',
+    desc: 'Peana rígida que se queda de pie en la mesa o el mostrador.',
+    delta: 7,
+  },
+};
 
 const TAG_TIERS = [
   { hasta: 4, precio: 6 },      // etiquetas 2 a 5
@@ -200,7 +208,7 @@ function nextTierInfo(extras) {
 const SECTORS = {
   gastronomia: {
     label: 'Gastronomía',
-    tagUnit: 'una por mesa',
+    cartaUnit: 'una por mesa',
     overrides: {
       catalogo: {
         name: 'Carta digital',
@@ -213,7 +221,7 @@ const SECTORS = {
   },
   estetica: {
     label: 'Estética',
-    tagUnit: 'recepción, sala de espera, cabinas…',
+    cartaUnit: 'recepción, sala de espera, cabinas…',
     overrides: {
       catalogo: {
         name: 'Catálogo de servicios',
@@ -226,7 +234,7 @@ const SECTORS = {
   },
   alojamientos: {
     label: 'Alojamientos',
-    tagUnit: 'una por habitación',
+    cartaUnit: 'una por habitación',
     overrides: {
       catalogo: {
         name: 'Guía del huésped',
@@ -239,7 +247,7 @@ const SECTORS = {
   },
   tiendas: {
     label: 'Tiendas',
-    tagUnit: 'mostrador, escaparate, probadores…',
+    cartaUnit: 'mostrador, escaparate, probadores…',
     overrides: {
       catalogo: {
         name: 'Catálogo de productos',
@@ -268,49 +276,49 @@ const SECURITY_CHECKS = [
     id: 'router',
     text: 'La contraseña de administración del router no es la que venía de fábrica.',
     why: 'Las claves por defecto de cada modelo están publicadas en internet.',
-    coveredBy: 'auditoria',
+    coveredBy: 'implantacion',
     when: () => true,
   },
   {
     id: 'google-2fa',
     text: 'Tu ficha de Google Business tiene verificación en dos pasos activada.',
     why: 'Si te roban esa cuenta pierdes el control de tus reseñas y de tus datos en Google Maps.',
-    coveredBy: 'auditoria',
+    coveredBy: 'implantacion',
     when: () => true,
   },
   {
     id: 'actualizaciones',
     text: 'Los dispositivos del local (TPV, tablet, ordenador) reciben actualizaciones.',
     why: 'La mayoría de ataques a comercios aprovechan fallos ya corregidos por el fabricante.',
-    coveredBy: 'vigilancia',
+    coveredBy: 'implantacion',
     when: () => true,
   },
   {
     id: 'personal',
     text: 'Tu equipo sabe reconocer un correo falso o una llamada de un falso proveedor.',
     why: 'El fraude al comercio pequeño casi siempre entra por una persona, no por un servidor.',
-    coveredBy: 'formacion',
+    coveredBy: 'implantacion',
     when: () => true,
   },
   {
     id: 'wifi-cifrado',
     text: 'El wifi usa cifrado WPA2 o WPA3, nunca WEP ni red abierta.',
     why: 'Vas a dar acceso a clientes: sin cifrado, cualquiera puede leer el tráfico de la red.',
-    coveredBy: 'wifiseguro',
+    coveredBy: 'implantacion',
     when: ({ has }) => has('wifi'),
   },
   {
     id: 'wifi-invitados',
     text: 'La red de clientes está separada de la red del TPV y de la caja.',
     why: 'Es la medida más importante al abrir el wifi al público: aísla tus cobros del tráfico de invitados.',
-    coveredBy: 'wifiseguro',
+    coveredBy: 'implantacion',
     when: ({ has }) => has('wifi'),
   },
   {
     id: 'tpv-aislado',
     text: 'El datáfono o TPV no comparte red con dispositivos personales del equipo.',
     why: 'En hostelería y tienda es donde pasan los cobros: cuanto más aislado, mejor.',
-    coveredBy: 'wifiseguro',
+    coveredBy: 'implantacion',
     when: ({ sector }) => sector === 'gastronomia' || sector === 'tiendas',
   },
   {
@@ -324,28 +332,28 @@ const SECURITY_CHECKS = [
     id: 'web-backup',
     text: 'Existe una copia de seguridad que se puede restaurar.',
     why: 'Una copia que nunca se ha probado no es una copia de seguridad.',
-    coveredBy: 'backups',
+    coveredBy: 'implantacion',
     when: ({ has }) => has('web') || has('catalogo'),
   },
   {
     id: 'panel-clave',
     text: 'El acceso al panel donde editas tu carta o catálogo tiene contraseña propia y fuerte.',
     why: 'Es lo que ven tus clientes: si alguien entra, puede cambiar precios o publicar lo que quiera.',
-    coveredBy: 'auditoria',
+    coveredBy: 'implantacion',
     when: ({ has }) => has('catalogo') || has('web'),
   },
   {
     id: 'rgpd-huespedes',
     text: 'Los datos de registro de viajeros se guardan cifrados y se borran cuando toca.',
     why: 'El registro de huéspedes son datos personales con obligaciones legales concretas.',
-    coveredBy: 'auditoria',
+    coveredBy: 'implantacion',
     when: ({ sector }) => sector === 'alojamientos',
   },
   {
     id: 'rgpd-fichas',
     text: 'Las fichas de clientes con datos de salud están bajo llave o cifradas.',
     why: 'Los datos de salud son categoría especial en el RGPD: exigen más protección que un nombre y un teléfono.',
-    coveredBy: 'auditoria',
+    coveredBy: 'implantacion',
     when: ({ sector }) => sector === 'estetica',
   },
   {
@@ -365,7 +373,14 @@ const VALIDEZ_DIAS = 30;
 const selected = new Set(SERVICES.filter((s) => s.required).map((s) => s.id));
 const securityDone = new Set();
 let currentSector = 'gastronomia';
-let tagCount = 1; // etiquetas totales, la primera va en el servicio base
+/*
+ * Una cantidad por cada servicio que lleva etiqueta física: las de
+ * reseñas y las de la carta son usos distintos y se piden en números
+ * distintos (en un bar, dos de reseñas en la barra y una por mesa para
+ * la carta). Cada servicio incluye ya su primera etiqueta.
+ */
+const tagCounts = { nfc: 1, catalogo: 1 };
+const tagFormats = { nfc: 'tarjeta', catalogo: 'soporte' };
 
 /* ---------- helpers ---------- */
 
@@ -394,9 +409,36 @@ function selectedServices() {
   return SERVICES.filter((s) => selected.has(s.id)).map((s) => resolveService(s, currentSector));
 }
 
-/** Etiquetas de más allá de la incluida en el servicio base. */
+/** Servicios con etiqueta física que están seleccionados ahora mismo. */
+function taggableServices() {
+  return SERVICES.filter((s) => s.taggable && selected.has(s.id));
+}
+
+/** Etiquetas totales pedidas, sumando todos los usos. */
+function totalTags() {
+  return taggableServices().reduce((n, s) => n + tagCounts[s.id], 0);
+}
+
+/*
+ * Etiquetas que se cobran aparte. Cada servicio incluye la primera, y
+ * el descuento por volumen se calcula sobre el total del pedido: lo
+ * que abarata la unidad es imprimir muchas, no en qué se usen.
+ */
 function extraTags() {
-  return Math.max(0, tagCount - 1);
+  return taggableServices().reduce((n, s) => n + Math.max(0, tagCounts[s.id] - 1), 0);
+}
+
+/** Suplementos de formato, que se cobran por unidad adicional. */
+function formatSupplements() {
+  return taggableServices().reduce(
+    (sum, s) => sum + Math.max(0, tagCounts[s.id] - 1) * TAG_FORMATS[tagFormats[s.id]].delta,
+    0
+  );
+}
+
+/** Lo que suman las etiquetas adicionales: volumen más formato. */
+function tagsCost() {
+  return extraTagsCost(extraTags()) + formatSupplements();
 }
 
 function totals() {
@@ -404,7 +446,8 @@ function totals() {
   return {
     once:
       chosen.filter((s) => s.unit === 'once').reduce((sum, s) => sum + s.price, 0) +
-      extraTagsCost(extraTags()),
+      tagsCost(),
+    // Los servicios 'quote' se listan pero no suman: su importe aún no existe.
     month: chosen.filter((s) => s.unit === 'month').reduce((sum, s) => sum + s.price, 0),
   };
 }
@@ -430,40 +473,81 @@ const listEl = document.getElementById('service-list');
 const tabs = Array.from(document.querySelectorAll('.tab'));
 
 /*
- * Selector de cantidad. Va fuera del <label> a propósito: unos botones
- * dentro de una etiqueta asociada a la casilla harían que pulsarlos
- * marcase también la casilla.
+ * Selector de cantidad, uno por cada servicio con etiqueta física.
+ * Va fuera del <label> a propósito: unos botones dentro de una
+ * etiqueta asociada a la casilla harían que pulsarlos marcasen
+ * también la casilla.
  */
-function qtyMarkup() {
+function qtyMarkup(s) {
+  const hint = s.id === 'catalogo' ? SECTORS[currentSector].cartaUnit : s.tagHint;
+
   return `
     <div class="qty">
       <div class="qty__row">
         <span class="qty__label">
           ¿Cuántas etiquetas?
-          <em>${esc(SECTORS[currentSector].tagUnit)}</em>
+          <em>${esc(hint)}</em>
         </span>
         <div class="qty__control">
-          <button type="button" class="qty__btn" data-step="-1" aria-label="Quitar una etiqueta">−</button>
-          <input class="qty__input" type="number" id="tag-count" inputmode="numeric"
-            min="1" max="${MAX_TAGS}" value="${tagCount}" aria-label="Número de etiquetas">
-          <button type="button" class="qty__btn" data-step="1" aria-label="Añadir una etiqueta">+</button>
+          <button type="button" class="qty__btn" data-qty="${s.id}" data-step="-1"
+            aria-label="Quitar una etiqueta">−</button>
+          <input class="qty__input" type="number" id="qty-${s.id}" data-qty="${s.id}"
+            inputmode="numeric" min="1" max="${MAX_TAGS}" value="${tagCounts[s.id]}"
+            aria-label="Número de etiquetas de ${esc(s.name)}">
+          <button type="button" class="qty__btn" data-qty="${s.id}" data-step="1"
+            aria-label="Añadir una etiqueta">+</button>
         </div>
       </div>
-      <p class="qty__detail" id="qty-detail" aria-live="polite"></p>
+
+      <fieldset class="formats">
+        <legend class="formats__legend">¿En qué formato?</legend>
+        ${Object.entries(TAG_FORMATS)
+          .map(([key, f]) => {
+            const activo = tagFormats[s.id] === key;
+            const extra =
+              f.delta === 0
+                ? 'sin recargo'
+                : `${f.delta > 0 ? '+' : '−'}${Math.abs(f.delta)} € / ud.`;
+            return `
+              <label class="format${activo ? ' format--on' : ''}" for="fmt-${s.id}-${key}">
+                <input type="radio" id="fmt-${s.id}-${key}" name="fmt-${s.id}"
+                  data-fmt="${s.id}" value="${key}" ${activo ? 'checked' : ''}>
+                <span class="format__text">
+                  <span class="format__name">${esc(f.name)} <em>${extra}</em></span>
+                  <span class="format__desc">${esc(f.desc)}</span>
+                </span>
+              </label>`;
+          })
+          .join('')}
+      </fieldset>
+    </div>
+  `;
+}
+
+/* Resumen del pedido de etiquetas: va una sola vez, porque el
+   descuento se calcula sobre el total de todas juntas. */
+function tagsSummaryMarkup() {
+  return `
+    <li class="tags-summary" id="tags-summary">
+      <p class="tags-summary__detail" id="qty-detail" aria-live="polite"></p>
       <ul class="qty__tiers">
         <li><span>2 – 5</span> 6 € / ud.</li>
         <li><span>6 – 15</span> 5 € / ud.</li>
         <li><span>16 – 30</span> 4 € / ud.</li>
         <li><span>31 o más</span> 3 € / ud.</li>
       </ul>
-    </div>
+    </li>
   `;
 }
 
 function serviceMarkup(raw) {
   const s = resolveService(raw, currentSector);
   const isOn = selected.has(s.id);
-  const priceLabel = s.unit === 'month' ? `${euros(s.price)}<span>/mes</span>` : euros(s.price);
+
+  let priceLabel;
+  if (s.unit === 'month') priceLabel = `${euros(s.price)}<span>/mes</span>`;
+  else if (s.unit === 'quote') priceLabel = '<span class="service__quote">A presupuestar</span>';
+  else priceLabel = euros(s.price);
 
   return `
     <li class="service${s.required ? ' service--required' : ''}">
@@ -484,40 +568,55 @@ function serviceMarkup(raw) {
         </span>
         <span class="service__price">${priceLabel}</span>
       </label>
-      ${s.id === 'nfc' ? qtyMarkup() : ''}
+      ${s.taggable && isOn ? qtyMarkup(s) : ''}
     </li>
   `;
 }
 
 /**
- * Texto de apoyo del selector: lo que se paga ahora y el empujón al
- * siguiente tramo. Se actualiza solo, sin volver a pintar la lista,
- * para no perder el foco mientras se escribe la cantidad.
+ * Texto de apoyo: qué se lleva en etiquetas y cuántas faltan para el
+ * siguiente tramo. Se actualiza solo, sin repintar la lista, para no
+ * perder el foco mientras se teclea la cantidad.
  */
 function renderQtyDetail() {
   const detalle = document.getElementById('qty-detail');
   if (!detalle) return;
 
   const extras = extraTags();
+  const desglose = taggableServices()
+    .map(
+      (s) =>
+        `${tagCounts[s.id]} de ${s.id === 'catalogo' ? 'la carta' : 'reseñas'} ` +
+        `en ${TAG_FORMATS[tagFormats[s.id]].name.toLowerCase()}`
+    )
+    .join(' + ');
 
   if (extras === 0) {
-    detalle.textContent = 'La primera etiqueta ya va incluida. La segunda te sale a 6 €.';
+    detalle.textContent =
+      `${totalTags()} ${totalTags() === 1 ? 'etiqueta' : 'etiquetas'} (${desglose}). ` +
+      'La primera de cada servicio va incluida; a partir de ahí, 6 € cada una.';
     return;
   }
 
-  const coste = extraTagsCost(extras);
+  const coste = tagsCost();
   const medio = (coste / extras).toFixed(2).replace('.', ',');
   const siguiente = nextTierInfo(extras);
+  const suplemento = formatSupplements();
 
   const partes = [
-    `${extras} ${extras === 1 ? 'etiqueta adicional' : 'etiquetas adicionales'}: ` +
+    `${totalTags()} etiquetas en total (${desglose}).`,
+    `${extras} ${extras === 1 ? 'se cobra aparte' : 'se cobran aparte'}: ` +
       `${euros(coste)} (${medio} € por etiqueta).`,
   ];
 
-  if (siguiente) {
+  if (suplemento !== 0) {
     partes.push(
-      `Con ${siguiente.faltan} más, las siguientes bajan a ${euros(siguiente.precio)}.`
+      `Incluye ${suplemento > 0 ? '' : 'un ahorro de '}${euros(Math.abs(suplemento))} por el formato.`
     );
+  }
+
+  if (siguiente) {
+    partes.push(`Con ${siguiente.faltan} más, las siguientes bajan a ${euros(siguiente.precio)}.`);
   }
 
   detalle.textContent = partes.join(' ');
@@ -527,11 +626,13 @@ function renderServices() {
   listEl.innerHTML = Object.entries(SERVICE_GROUPS)
     .map(([key, group]) => {
       const items = SERVICES.filter((s) => s.group === key).map(serviceMarkup).join('');
+      // El resumen de etiquetas cierra el grupo NFC, que es donde están.
+      const resumen = key === 'nfc' ? tagsSummaryMarkup() : '';
       return `
         <li class="services__group">
           <p class="services__group-title">${esc(group.label)}</p>
           <p class="services__group-desc">${esc(group.desc)}</p>
-          <ul class="services__items">${items}</ul>
+          <ul class="services__items">${items}${resumen}</ul>
         </li>
       `;
     })
@@ -553,7 +654,7 @@ function renderSummary() {
   const lineaEtiquetas = extras
     ? `<li class="summary__item">
          <span>${extras} ${extras === 1 ? 'etiqueta adicional' : 'etiquetas adicionales'}</span>
-         <span class="summary__item-price">${euros(extraTagsCost(extras))}</span>
+         <span class="summary__item-price">${euros(tagsCost())}</span>
        </li>`
     : '';
 
@@ -637,7 +738,7 @@ function renderScore() {
 
   // La llamada a la acción solo tiene sentido si queda algo por resolver
   // y todavía no ha contratado la revisión.
-  const mostrarCta = pendientes.length > 0 && !selected.has('auditoria');
+  const mostrarCta = pendientes.length > 0 && !selected.has('informe');
   checklistCtaEl.hidden = !mostrarCta;
   if (mostrarCta) {
     checklistCtaEl.querySelector('.checklist__cta-text').textContent =
@@ -654,12 +755,14 @@ function update() {
   renderChecklist();
 }
 
-/** Cambia la cantidad de etiquetas sin repintar la lista de servicios. */
-function setTagCount(valor) {
-  const n = Math.min(MAX_TAGS, Math.max(1, Math.round(Number(valor) || 1)));
-  tagCount = n;
+/** Cambia la cantidad de un servicio sin repintar la lista entera. */
+function setTagCount(id, valor) {
+  if (!(id in tagCounts)) return;
 
-  const input = document.getElementById('tag-count');
+  const n = Math.min(MAX_TAGS, Math.max(1, Math.round(Number(valor) || 1)));
+  tagCounts[id] = n;
+
+  const input = document.getElementById(`qty-${id}`);
   if (input && Number(input.value) !== n) input.value = n;
 
   renderQtyDetail();
@@ -669,9 +772,18 @@ function setTagCount(valor) {
 /* ---------- interacción ---------- */
 
 listEl.addEventListener('change', (event) => {
+  const formato = event.target.closest('input[data-fmt]');
+  if (formato) {
+    tagFormats[formato.dataset.fmt] = formato.value;
+    renderServices();
+    renderQtyDetail();
+    renderSummary();
+    return;
+  }
+
   const cantidad = event.target.closest('.qty__input');
   if (cantidad) {
-    setTagCount(cantidad.value);
+    setTagCount(cantidad.dataset.qty, cantidad.value);
     return;
   }
 
@@ -681,19 +793,25 @@ listEl.addEventListener('change', (event) => {
   if (input.checked) selected.add(input.value);
   else selected.delete(input.value);
 
+  // Si el servicio lleva etiquetas, aparece o desaparece su selector.
+  if (serviceById(input.value)?.taggable) renderServices();
+
+  renderQtyDetail();
   renderSummary();
   renderChecklist();
 });
 
 // Mientras se teclea, para que el precio acompañe sin esperar al blur.
 listEl.addEventListener('input', (event) => {
-  if (event.target.closest('.qty__input')) setTagCount(event.target.value);
+  const campo = event.target.closest('.qty__input');
+  if (campo) setTagCount(campo.dataset.qty, campo.value);
 });
 
 listEl.addEventListener('click', (event) => {
   const boton = event.target.closest('.qty__btn');
   if (!boton) return;
-  setTagCount(tagCount + Number(boton.dataset.step));
+  const id = boton.dataset.qty;
+  setTagCount(id, tagCounts[id] + Number(boton.dataset.step));
 });
 
 checklistEl.addEventListener('change', (event) => {
@@ -708,7 +826,7 @@ checklistEl.addEventListener('change', (event) => {
 
 // "Que se ocupe Gertu": marca la revisión y lleva al configurador.
 checklistCtaEl.querySelector('button').addEventListener('click', () => {
-  selected.add('auditoria');
+  selected.add('informe');
   update();
   document.getElementById('packs').scrollIntoView({ behavior: 'smooth' });
 });
@@ -774,9 +892,9 @@ function buildQuote() {
            <strong>${extras} ${extras === 1 ? 'etiqueta NFC adicional' : 'etiquetas NFC adicionales'}</strong>
            <span>Mismo contenido en todas (${esc(SECTORS[currentSector].tagUnit)}).
              Precio por unidad según tramos de cantidad:
-             ${(extraTagsCost(extras) / extras).toFixed(2).replace('.', ',')} € de media.</span>
+             ${(tagsCost() / extras).toFixed(2).replace('.', ',')} € de media.</span>
          </td>
-         <td class="quote__cell-price">${euros(extraTagsCost(extras))}</td>
+         <td class="quote__cell-price">${euros(tagsCost())}</td>
        </tr>`
     : '';
 
@@ -923,10 +1041,13 @@ function buildEmailBody() {
 
   const extras = extraTags();
   if (extras) {
-    lineas.push(`- ${extras} etiquetas adicionales: ${euros(extraTagsCost(extras))}`);
+    lineas.push(`- ${extras} etiquetas adicionales: ${euros(tagsCost())}`);
   }
   lineas.push('');
-  lineas.push(`Etiquetas en total: ${tagCount}`);
+  lineas.push(`Etiquetas en total: ${totalTags()}`);
+  taggableServices().forEach((s) => {
+    lineas.push(`  · ${s.id === 'catalogo' ? 'Carta' : 'Reseñas'}: ${tagCounts[s.id]} en ${TAG_FORMATS[tagFormats[s.id]].name.toLowerCase()}`);
+  });
   lineas.push(`Total pago único: ${euros(once)}`);
   if (month > 0) lineas.push(`Cuota mensual: ${euros(month)}/mes`);
 
