@@ -461,6 +461,97 @@ section {
 }
 .service__price span { font-size: 0.7rem; color: var(--dim); }
 
+/* ---- selector de cantidad de etiquetas ---- */
+
+.qty {
+  border-top: 1px solid var(--line);
+  margin: 0 1.3rem;
+  padding: 1.1rem 0 1.3rem;
+}
+
+.qty__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.qty__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.qty__label em {
+  display: block;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--dim);
+}
+
+.qty__control {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.qty__btn {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--blue);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.qty__btn:hover { border-color: var(--blue); background: var(--paper-dim); }
+
+.qty__input {
+  width: 64px;
+  padding: 0.5em;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--blue);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-s);
+  background: #fff;
+}
+.qty__input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.qty__detail {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.qty__tiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--line);
+}
+.qty__tiers li {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--dim);
+}
+.qty__tiers span {
+  color: var(--ink);
+  font-weight: 600;
+  margin-right: 0.4em;
+}
+
 /* ---- resumen ---- */
 
 .summary {

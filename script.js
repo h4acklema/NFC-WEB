@@ -29,7 +29,7 @@ const SERVICES = [
     id: 'nfc',
     group: 'nfc',
     name: 'Etiqueta NFC + reseñas en Google',
-    desc: 'La tarjeta física programada y tu página con enlace directo a tus reseñas. Es la base de todo lo demás.',
+    desc: 'Tu página con enlace directo a tus reseñas y la primera tarjeta física ya programada. Es la base de todo lo demás.',
     price: 25,
     unit: 'once',
     required: true,
@@ -126,6 +126,73 @@ const SERVICES = [
   },
 ];
 
+/* =========================================================
+ * Etiquetas adicionales.
+ *
+ * El contenido (la carta, el wifi, las reseñas) es el mismo para
+ * todas las etiquetas de un negocio: se configura una vez y se
+ * replica. Lo único que cuesta por unidad es la tarjeta física, así
+ * que a más cantidad, menos precio por etiqueta.
+ *
+ * Los tramos son ACUMULATIVOS: cada uno se aplica solo a las unidades
+ * que caen dentro de él, como en un IRPF. Si se aplicara el precio del
+ * último tramo a todas las unidades, pedir 16 etiquetas saldría más
+ * barato que pedir 15, y ese salto absurdo obligaría al cliente a
+ * pedir de más para pagar menos.
+ *
+ * La primera etiqueta va incluida en el servicio base, así que estos
+ * tramos cuentan a partir de la segunda.
+ * ========================================================= */
+
+const TAG_TIERS = [
+  { hasta: 4, precio: 6 },      // etiquetas 2 a 5
+  { hasta: 14, precio: 5 },     // etiquetas 6 a 15
+  { hasta: 29, precio: 4 },     // etiquetas 16 a 30
+  { hasta: Infinity, precio: 3 }, // a partir de la 31
+];
+
+const MAX_TAGS = 200;
+
+/** Coste de las etiquetas adicionales, aplicando los tramos por partes. */
+function extraTagsCost(extras) {
+  let restantes = Math.max(0, extras);
+  let acumuladas = 0;
+  let total = 0;
+
+  for (const tramo of TAG_TIERS) {
+    if (restantes <= 0) break;
+    const cabenEnTramo = tramo.hasta - acumuladas;
+    const enEsteTramo = Math.min(restantes, cabenEnTramo);
+    total += enEsteTramo * tramo.precio;
+    acumuladas += enEsteTramo;
+    restantes -= enEsteTramo;
+  }
+
+  return total;
+}
+
+/** Precio por unidad de la siguiente etiqueta que se añada. */
+function nextTagPrice(extras) {
+  let acumuladas = 0;
+  for (const tramo of TAG_TIERS) {
+    if (extras < tramo.hasta) return tramo.precio;
+    acumuladas = tramo.hasta;
+  }
+  return TAG_TIERS[TAG_TIERS.length - 1].precio;
+}
+
+/** Cuántas etiquetas más hacen falta para entrar en el siguiente tramo. */
+function nextTierInfo(extras) {
+  let acumuladas = 0;
+  for (let i = 0; i < TAG_TIERS.length - 1; i++) {
+    acumuladas = TAG_TIERS[i].hasta;
+    if (extras < acumuladas) {
+      return { faltan: acumuladas - extras, precio: TAG_TIERS[i + 1].precio };
+    }
+  }
+  return null;
+}
+
 /*
  * Ajustes de texto por sector. Solo cambian el nombre y la descripción
  * de algunos servicios — los precios son los mismos para todos.
@@ -133,6 +200,7 @@ const SERVICES = [
 const SECTORS = {
   gastronomia: {
     label: 'Gastronomía',
+    tagUnit: 'una por mesa',
     overrides: {
       catalogo: {
         name: 'Carta digital',
@@ -145,6 +213,7 @@ const SECTORS = {
   },
   estetica: {
     label: 'Estética',
+    tagUnit: 'recepción, sala de espera, cabinas…',
     overrides: {
       catalogo: {
         name: 'Catálogo de servicios',
@@ -157,6 +226,7 @@ const SECTORS = {
   },
   alojamientos: {
     label: 'Alojamientos',
+    tagUnit: 'una por habitación',
     overrides: {
       catalogo: {
         name: 'Guía del huésped',
@@ -169,6 +239,7 @@ const SECTORS = {
   },
   tiendas: {
     label: 'Tiendas',
+    tagUnit: 'mostrador, escaparate, probadores…',
     overrides: {
       catalogo: {
         name: 'Catálogo de productos',
@@ -294,6 +365,7 @@ const VALIDEZ_DIAS = 30;
 const selected = new Set(SERVICES.filter((s) => s.required).map((s) => s.id));
 const securityDone = new Set();
 let currentSector = 'gastronomia';
+let tagCount = 1; // etiquetas totales, la primera va en el servicio base
 
 /* ---------- helpers ---------- */
 
@@ -322,10 +394,17 @@ function selectedServices() {
   return SERVICES.filter((s) => selected.has(s.id)).map((s) => resolveService(s, currentSector));
 }
 
+/** Etiquetas de más allá de la incluida en el servicio base. */
+function extraTags() {
+  return Math.max(0, tagCount - 1);
+}
+
 function totals() {
   const chosen = selectedServices();
   return {
-    once: chosen.filter((s) => s.unit === 'once').reduce((sum, s) => sum + s.price, 0),
+    once:
+      chosen.filter((s) => s.unit === 'once').reduce((sum, s) => sum + s.price, 0) +
+      extraTagsCost(extraTags()),
     month: chosen.filter((s) => s.unit === 'month').reduce((sum, s) => sum + s.price, 0),
   };
 }
@@ -349,6 +428,37 @@ function checkState(check) {
 
 const listEl = document.getElementById('service-list');
 const tabs = Array.from(document.querySelectorAll('.tab'));
+
+/*
+ * Selector de cantidad. Va fuera del <label> a propósito: unos botones
+ * dentro de una etiqueta asociada a la casilla harían que pulsarlos
+ * marcase también la casilla.
+ */
+function qtyMarkup() {
+  return `
+    <div class="qty">
+      <div class="qty__row">
+        <span class="qty__label">
+          ¿Cuántas etiquetas?
+          <em>${esc(SECTORS[currentSector].tagUnit)}</em>
+        </span>
+        <div class="qty__control">
+          <button type="button" class="qty__btn" data-step="-1" aria-label="Quitar una etiqueta">−</button>
+          <input class="qty__input" type="number" id="tag-count" inputmode="numeric"
+            min="1" max="${MAX_TAGS}" value="${tagCount}" aria-label="Número de etiquetas">
+          <button type="button" class="qty__btn" data-step="1" aria-label="Añadir una etiqueta">+</button>
+        </div>
+      </div>
+      <p class="qty__detail" id="qty-detail" aria-live="polite"></p>
+      <ul class="qty__tiers">
+        <li><span>2 – 5</span> 6 € / ud.</li>
+        <li><span>6 – 15</span> 5 € / ud.</li>
+        <li><span>16 – 30</span> 4 € / ud.</li>
+        <li><span>31 o más</span> 3 € / ud.</li>
+      </ul>
+    </div>
+  `;
+}
 
 function serviceMarkup(raw) {
   const s = resolveService(raw, currentSector);
@@ -374,8 +484,43 @@ function serviceMarkup(raw) {
         </span>
         <span class="service__price">${priceLabel}</span>
       </label>
+      ${s.id === 'nfc' ? qtyMarkup() : ''}
     </li>
   `;
+}
+
+/**
+ * Texto de apoyo del selector: lo que se paga ahora y el empujón al
+ * siguiente tramo. Se actualiza solo, sin volver a pintar la lista,
+ * para no perder el foco mientras se escribe la cantidad.
+ */
+function renderQtyDetail() {
+  const detalle = document.getElementById('qty-detail');
+  if (!detalle) return;
+
+  const extras = extraTags();
+
+  if (extras === 0) {
+    detalle.textContent = 'La primera etiqueta ya va incluida. La segunda te sale a 6 €.';
+    return;
+  }
+
+  const coste = extraTagsCost(extras);
+  const medio = (coste / extras).toFixed(2).replace('.', ',');
+  const siguiente = nextTierInfo(extras);
+
+  const partes = [
+    `${extras} ${extras === 1 ? 'etiqueta adicional' : 'etiquetas adicionales'}: ` +
+      `${euros(coste)} (${medio} € por etiqueta).`,
+  ];
+
+  if (siguiente) {
+    partes.push(
+      `Con ${siguiente.faltan} más, las siguientes bajan a ${euros(siguiente.precio)}.`
+    );
+  }
+
+  detalle.textContent = partes.join(' ');
 }
 
 function renderServices() {
@@ -404,15 +549,24 @@ function renderSummary() {
   const chosen = selectedServices();
   const { once, month } = totals();
 
-  summaryListEl.innerHTML = chosen
-    .map(
-      (s) => `
+  const extras = extraTags();
+  const lineaEtiquetas = extras
+    ? `<li class="summary__item">
+         <span>${extras} ${extras === 1 ? 'etiqueta adicional' : 'etiquetas adicionales'}</span>
+         <span class="summary__item-price">${euros(extraTagsCost(extras))}</span>
+       </li>`
+    : '';
+
+  summaryListEl.innerHTML =
+    chosen
+      .map(
+        (s) => `
         <li class="summary__item">
           <span>${esc(s.name)}</span>
           <span class="summary__item-price">${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}</span>
         </li>`
-    )
-    .join('');
+      )
+      .join('') + lineaEtiquetas;
 
   summaryOnceEl.textContent = euros(once);
   summaryMonthEl.textContent = `${euros(month)}/mes`;
@@ -495,13 +649,32 @@ function renderScore() {
 
 function update() {
   renderServices();
+  renderQtyDetail();
   renderSummary();
   renderChecklist();
+}
+
+/** Cambia la cantidad de etiquetas sin repintar la lista de servicios. */
+function setTagCount(valor) {
+  const n = Math.min(MAX_TAGS, Math.max(1, Math.round(Number(valor) || 1)));
+  tagCount = n;
+
+  const input = document.getElementById('tag-count');
+  if (input && Number(input.value) !== n) input.value = n;
+
+  renderQtyDetail();
+  renderSummary();
 }
 
 /* ---------- interacción ---------- */
 
 listEl.addEventListener('change', (event) => {
+  const cantidad = event.target.closest('.qty__input');
+  if (cantidad) {
+    setTagCount(cantidad.value);
+    return;
+  }
+
   const input = event.target.closest('.service__check');
   if (!input) return;
 
@@ -510,6 +683,17 @@ listEl.addEventListener('change', (event) => {
 
   renderSummary();
   renderChecklist();
+});
+
+// Mientras se teclea, para que el precio acompañe sin esperar al blur.
+listEl.addEventListener('input', (event) => {
+  if (event.target.closest('.qty__input')) setTagCount(event.target.value);
+});
+
+listEl.addEventListener('click', (event) => {
+  const boton = event.target.closest('.qty__btn');
+  if (!boton) return;
+  setTagCount(tagCount + Number(boton.dataset.step));
 });
 
 checklistEl.addEventListener('change', (event) => {
@@ -583,9 +767,23 @@ function buildQuote() {
     year: 'numeric',
   });
 
-  const filas = chosen
-    .map(
-      (s) => `
+  const extras = extraTags();
+  const filaEtiquetas = extras
+    ? `<tr>
+         <td>
+           <strong>${extras} ${extras === 1 ? 'etiqueta NFC adicional' : 'etiquetas NFC adicionales'}</strong>
+           <span>Mismo contenido en todas (${esc(SECTORS[currentSector].tagUnit)}).
+             Precio por unidad según tramos de cantidad:
+             ${(extraTagsCost(extras) / extras).toFixed(2).replace('.', ',')} € de media.</span>
+         </td>
+         <td class="quote__cell-price">${euros(extraTagsCost(extras))}</td>
+       </tr>`
+    : '';
+
+  const filas =
+    chosen
+      .map(
+        (s) => `
         <tr>
           <td>
             <strong>${esc(s.name)}</strong>
@@ -593,8 +791,8 @@ function buildQuote() {
           </td>
           <td class="quote__cell-price">${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}</td>
         </tr>`
-    )
-    .join('');
+      )
+      .join('') + filaEtiquetas;
 
   const bloquePendientes = pendientes.length
     ? `
@@ -722,7 +920,13 @@ function buildEmailBody() {
   selectedServices().forEach((s) => {
     lineas.push(`- ${s.name}: ${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}`);
   });
+
+  const extras = extraTags();
+  if (extras) {
+    lineas.push(`- ${extras} etiquetas adicionales: ${euros(extraTagsCost(extras))}`);
+  }
   lineas.push('');
+  lineas.push(`Etiquetas en total: ${tagCount}`);
   lineas.push(`Total pago único: ${euros(once)}`);
   if (month > 0) lineas.push(`Cuota mensual: ${euros(month)}/mes`);
 
