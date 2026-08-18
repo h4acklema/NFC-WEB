@@ -71,7 +71,7 @@
 
     <nav class="nav__nav" aria-label="Principal">
       <ul class="nav__links" id="nav-links">
-        <li><a href="#packs">Packs</a></li>
+        <li><a href="#packs">Precios</a></li>
         <li><a href="#como">Cómo funciona</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#contacto" class="nav__cta">Contacto</a></li>
@@ -92,7 +92,7 @@
         se conectan al wifi o ven tu carta digital actualizada.
       </p>
       <div class="hero__actions">
-        <a href="#packs" class="btn btn--primary">Ver packs y precios</a>
+        <a href="#packs" class="btn btn--primary">Calcular mi precio</a>
         <a href="#como" class="btn btn--ghost">Cómo funciona</a>
       </div>
     </div>
@@ -104,21 +104,49 @@
     </a>
   </section>
 
-  <section class="packs" id="packs" aria-label="Packs por sector">
+  <section class="packs" id="packs" aria-label="Precios y configurador">
     <div class="section-head">
-      <p class="section-eyebrow">Packs</p>
-      <h2>Un pack para cada tipo de negocio</h2>
-      <p class="section-lead">Elige tu sector y compara los niveles. Todos incluyen la etiqueta NFC física, configuración y microsite propio.</p>
+      <p class="section-eyebrow">Precios</p>
+      <h2>Paga solo por lo que necesitas</h2>
+      <p class="section-lead">Marca los servicios que quieres y mira cómo cambia el precio. Cuando lo tengas, descárgate el presupuesto en PDF.</p>
     </div>
 
     <div class="tabs" role="tablist" aria-label="Sectores">
-      <button class="tab" role="tab" data-sector="gastronomia" id="tab-gastronomia" aria-controls="cards" aria-selected="true">Gastronomía</button>
-      <button class="tab" role="tab" data-sector="estetica" id="tab-estetica" aria-controls="cards" aria-selected="false" tabindex="-1">Estética</button>
-      <button class="tab" role="tab" data-sector="alojamientos" id="tab-alojamientos" aria-controls="cards" aria-selected="false" tabindex="-1">Alojamientos</button>
-      <button class="tab" role="tab" data-sector="tiendas" id="tab-tiendas" aria-controls="cards" aria-selected="false" tabindex="-1">Tiendas</button>
+      <button class="tab" role="tab" data-sector="gastronomia" id="tab-gastronomia" aria-controls="service-list" aria-selected="true">Gastronomía</button>
+      <button class="tab" role="tab" data-sector="estetica" id="tab-estetica" aria-controls="service-list" aria-selected="false" tabindex="-1">Estética</button>
+      <button class="tab" role="tab" data-sector="alojamientos" id="tab-alojamientos" aria-controls="service-list" aria-selected="false" tabindex="-1">Alojamientos</button>
+      <button class="tab" role="tab" data-sector="tiendas" id="tab-tiendas" aria-controls="service-list" aria-selected="false" tabindex="-1">Tiendas</button>
     </div>
 
-    <div class="cards" id="cards" role="tabpanel" aria-labelledby="tab-gastronomia"></div>
+    <div class="configurator">
+      <ul class="services" id="service-list" role="tabpanel" aria-labelledby="tab-gastronomia"></ul>
+
+      <aside class="summary" aria-label="Resumen de tu presupuesto">
+        <h3 class="summary__title">Tu presupuesto</h3>
+
+        <ul class="summary__list" id="summary-list" aria-live="polite"></ul>
+
+        <div class="summary__totals">
+          <p class="summary__total">
+            <span>Pago único</span>
+            <strong id="summary-once">25 €</strong>
+          </p>
+          <p class="summary__total summary__total--month" id="summary-month-row" hidden>
+            <span>Después</span>
+            <strong id="summary-month">12 €/mes</strong>
+          </p>
+        </div>
+
+        <label class="summary__field" for="negocio">
+          Nombre de tu negocio <span>(para el PDF)</span>
+          <input type="text" id="negocio" placeholder="Bar Zuria" autocomplete="organization">
+        </label>
+
+        <button type="button" class="btn btn--primary summary__cta" id="generar-pdf">Descargar presupuesto en PDF</button>
+
+        <p class="summary__note">Precios sin IVA. Descargarlo no te compromete a nada.</p>
+      </aside>
+    </div>
   </section>
 
   <section class="como" id="como" aria-label="Cómo funciona">
@@ -132,7 +160,7 @@
       <li class="step">
         <span class="step__number">01</span>
         <h3 class="step__title">Nos cuentas tu negocio</h3>
-        <p class="step__body">Eliges sector y pack. Nosotros preparamos tu microsite con tu enlace de reseñas de Google, tu wifi y, si aplica, tu carta o catálogo.</p>
+        <p class="step__body">Eliges tu sector y marcas los servicios que quieres. Nosotros preparamos tu página con tu enlace de reseñas de Google, tu wifi y, si lo has elegido, tu carta o catálogo.</p>
       </li>
       <li class="step">
         <span class="step__number">02</span>
@@ -182,16 +210,20 @@
         <p>En Android sí, la conexión es automática con el toque. En iPhone, Apple no permite conectar a redes wifi por NFC de forma automática: el toque abre igualmente tu microsite, con el nombre de la red y la contraseña listos para copiar, sin tener que teclearlos a mano.</p>
       </details>
       <details class="accordion__item">
-        <summary>¿Puedo cambiar el contenido después de comprar el pack?</summary>
-        <p>Sí. El microsite es editable: puedes actualizar tu carta, tus datos de wifi o el enlace de reseñas cuando lo necesites, sin volver a programar la etiqueta física.</p>
+        <summary>No tengo web. ¿Me hace falta una para usar la etiqueta?</summary>
+        <p>No. Con la etiqueta ya recibes una página propia, sencilla, con lo que necesites (reseñas, wifi, carta). Y si además quieres una web completa de tu negocio, con tus servicios, horario y contacto, puedes añadirla como servicio en el configurador de arriba.</p>
+      </details>
+      <details class="accordion__item">
+        <summary>¿Puedo cambiar el contenido más adelante?</summary>
+        <p>Sí. Tu página es editable: puedes actualizar tu carta, tus datos de wifi o el enlace de reseñas cuando lo necesites, sin volver a programar la etiqueta física. Si prefieres no ocuparte tú, añade el servicio de mantenimiento y lo hacemos nosotros.</p>
       </details>
       <details class="accordion__item">
         <summary>¿Cuánto tarda en llegar la etiqueta NFC?</summary>
         <p>Preparamos y programamos tu etiqueta en los días posteriores a la contratación. Te avisamos por email en cuanto está lista para enviar.</p>
       </details>
       <details class="accordion__item">
-        <summary>¿El pack "Diseño exclusivo" tiene permanencia?</summary>
-        <p>La cuota mensual del pack "Diseño exclusivo" no tiene permanencia: puedes darte de baja cuando quieras.</p>
+        <summary>La cuota mensual de mantenimiento, ¿tiene permanencia?</summary>
+        <p>No. Puedes darte de baja cuando quieras, y tu etiqueta y tu página siguen funcionando igual: lo que dejas de tener es que nos ocupemos nosotros de los cambios.</p>
       </details>
     </div>
   </section>
@@ -204,6 +236,9 @@
   <a href="mailto:hola@toka.es" class="btn btn--primary">hola@toka.es</a>
   <p class="footer__legal">© 2026 TOKA · Vitoria-Gasteiz</p>
 </footer>
+
+<!-- Presupuesto: oculto en pantalla, es lo único que se imprime/guarda como PDF. -->
+<div class="quote" id="quote" aria-hidden="true"></div>
 
 <script src="script.js" defer></script>
 </body>
