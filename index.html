@@ -57,6 +57,17 @@
 </script>
 </head>
 <body>
+
+<!--
+  Cortinilla de entrada. La animación CSS termina con la capa oculta
+  (animation-fill-mode: forwards), así que desaparece sola aunque el
+  JS falle; el JS solo la retira del DOM y libera el scroll.
+-->
+<div class="intro" id="intro" role="presentation">
+  <p class="intro__word">TOKA</p>
+  <span class="intro__rule"></span>
+</div>
+
 <a class="skip-link" href="#main">Saltar al contenido</a>
 
 <header class="nav" id="top">
@@ -82,32 +93,10 @@
 
 <main id="main">
 
-  <section class="hero" aria-label="Presentación">
-    <div class="hero__content">
-      <p class="hero__eyebrow">Digitalización NFC para comercio local · Vitoria-Gasteiz</p>
-      <h1 class="hero__title">Un toque. Más reseñas, wifi al instante y tu carta siempre al día.</h1>
-      <p class="hero__lead">
-        TOKA convierte una simple etiqueta NFC en tu mejor herramienta de reputación:
-        tus clientes acercan el móvil y, sin descargar nada, dejan una reseña en Google,
-        se conectan al wifi o ven tu carta digital actualizada.
-      </p>
-      <div class="hero__actions">
-        <a href="#packs" class="btn btn--primary">Calcular mi precio</a>
-        <a href="#como" class="btn btn--ghost">Cómo funciona</a>
-      </div>
-    </div>
-
-    <a href="#packs" class="scroll-arrow" aria-label="Ir a packs y precios">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </a>
-  </section>
-
   <section class="packs" id="packs" aria-label="Precios y configurador">
-    <div class="section-head">
-      <p class="section-eyebrow">Precios</p>
-      <h2>Paga solo por lo que necesitas</h2>
+    <div class="section-head section-head--hero">
+      <p class="section-eyebrow">Digitalización NFC · Vitoria-Gasteiz</p>
+      <h1>Paga solo por lo que necesitas</h1>
       <p class="section-lead">Marca los servicios que quieres y mira cómo cambia el precio. Cuando lo tengas, descárgate el presupuesto en PDF.</p>
     </div>
 
@@ -122,7 +111,7 @@
       <ul class="services" id="service-list" role="tabpanel" aria-labelledby="tab-gastronomia"></ul>
 
       <aside class="summary" aria-label="Resumen de tu presupuesto">
-        <h3 class="summary__title">Tu presupuesto</h3>
+        <h2 class="summary__title">Tu presupuesto</h2>
 
         <ul class="summary__list" id="summary-list" aria-live="polite"></ul>
 
@@ -235,13 +224,54 @@
     </div>
   </section>
 
+  <section class="contacto" id="contacto" aria-label="Contacto y diagnóstico de seguridad">
+    <div class="section-head">
+      <p class="section-eyebrow">Hablemos</p>
+      <h2>Cuéntanos tu caso</h2>
+      <p class="section-lead">Antes de escribirnos, repasa el diagnóstico de seguridad: cambia según los servicios que hayas marcado arriba, y se envía con tu mensaje.</p>
+    </div>
+
+    <div class="contact-grid">
+
+      <div class="checklist" aria-labelledby="checklist-title">
+        <h3 class="checklist__title" id="checklist-title">Diagnóstico de seguridad de tu establecimiento</h3>
+        <p class="checklist__intro" id="checklist-context"></p>
+
+        <ul class="checklist__items" id="checklist-items"></ul>
+
+        <p class="checklist__score" id="checklist-score" aria-live="polite"></p>
+      </div>
+
+      <form class="contact-form" id="contact-form" novalidate>
+        <label class="field" for="email">
+          Tu email
+          <input type="email" id="email" name="email" required placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </label>
+
+        <label class="field" for="telefono">
+          Teléfono <span>(opcional)</span>
+          <input type="tel" id="telefono" name="telefono" placeholder="600 000 000" autocomplete="tel">
+        </label>
+
+        <label class="field" for="mensaje">
+          Tu mensaje
+          <textarea id="mensaje" name="mensaje" rows="4" placeholder="Cuéntanos qué necesitas o qué dudas tienes."></textarea>
+        </label>
+
+        <button type="submit" class="btn btn--primary contact-form__cta">Enviar a hola@toka.es</button>
+
+        <p class="contact-form__note" id="form-status">
+          Se abrirá tu programa de correo con el presupuesto y el diagnóstico ya escritos. Repasa el mensaje antes de enviarlo.
+        </p>
+      </form>
+
+    </div>
+  </section>
+
 </main>
 
-<footer class="footer" id="contacto">
-  <h2 class="footer__title">¿Hablamos de tu negocio?</h2>
-  <p class="footer__lead">Cuéntanos tu sector y te preparamos una propuesta a medida.</p>
-  <a href="mailto:hola@toka.es" class="btn btn--primary">hola@toka.es</a>
-  <p class="footer__legal">© 2026 TOKA · Vitoria-Gasteiz</p>
+<footer class="footer">
+  <p class="footer__legal">© 2026 TOKA · Vitoria-Gasteiz · <a href="mailto:hola@toka.es">hola@toka.es</a></p>
 </footer>
 
 <!-- Presupuesto: oculto en pantalla, es lo único que se imprime/guarda como PDF. -->

@@ -29,6 +29,67 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* =========================================================
+   CORTINILLA DE ENTRADA
+   TOKA centrado sobre azul, se desvanece y deja la lista de
+   precios. Toda la secuencia son 2,2s encadenados:
+     0,0-0,9s  aparece la palabra (introWord)
+     0,3-1,1s  se traza la línea bajo ella (introRule)
+     1,5-2,2s  se funde la capa entera (introOut)
+   El fill-mode forwards deja la capa oculta al acabar, así que
+   desaparece aunque el JS no llegue a ejecutarse.
+   ========================================================= */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--blue);
+  animation: introOut 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.intro__word {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(2.8rem, 10vw, 5rem);
+  color: var(--paper);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em; /* compensa el espacio que letter-spacing añade al final */
+  opacity: 0;
+  animation: introWord 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+
+.intro__rule {
+  width: 0;
+  height: 1px;
+  background: var(--blue-soft);
+  animation: introRule 0.8s 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes introWord {
+  from { opacity: 0; letter-spacing: 0.9em; }
+  to   { opacity: 1; letter-spacing: 0.5em; }
+}
+
+@keyframes introRule {
+  from { width: 0; opacity: 0; }
+  to   { width: min(220px, 45vw); opacity: 1; }
+}
+
+@keyframes introOut {
+  0%, 68%  { opacity: 1; visibility: visible; }
+  100%     { opacity: 0; visibility: hidden; }
+}
+
+/* Mientras dura la cortinilla no se puede hacer scroll. */
+body.is-intro { overflow: hidden; }
+
 html {
   scroll-behavior: smooth;
 }
@@ -122,6 +183,16 @@ section {
 .section-head h2 { font-size: clamp(1.8rem, 1.5rem + 1.2vw, 2.5rem); }
 .section-lead { max-width: 46ch; margin: 0 auto; }
 
+/* Cabecera de la primera sección: es el h1 de la página. */
+.section-head--hero {
+  max-width: 720px;
+  padding-top: clamp(1rem, 3vw, 2.5rem);
+}
+.section-head--hero h1 {
+  font-size: clamp(2.2rem, 1.6rem + 2.4vw, 3.4rem);
+  margin-bottom: 0.4em;
+}
+
 /* ---------- nav ---------- */
 
 .nav {
@@ -192,69 +263,6 @@ section {
   height: 2px;
   background: var(--ink);
   transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-/* ---------- hero ---------- */
-
-.hero {
-  position: relative;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: clamp(2.5rem, 4vw, 4rem) 1.5rem clamp(3.5rem, 6vw, 5rem);
-  text-align: center;
-}
-
-.hero__eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 1em;
-}
-
-.hero__title {
-  font-size: clamp(2.2rem, 1.6rem + 2.6vw, 3.6rem);
-  max-width: 16ch;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.hero__lead {
-  max-width: 46ch;
-  margin-left: auto;
-  margin-right: auto;
-  font-size: 1.05rem;
-}
-
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.scroll-arrow {
-  position: absolute;
-  left: 50%;
-  bottom: 0.5rem;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid var(--line);
-  border-radius: 50%;
-  color: var(--blue);
-  animation: bounce 2s ease-in-out infinite;
-}
-.scroll-arrow svg { width: 18px; height: 18px; }
-
-@keyframes bounce {
-  0%, 100% { transform: translate(-50%, 0); }
-  50% { transform: translate(-50%, 6px); }
 }
 
 /* ---------- packs ---------- */
@@ -584,33 +592,182 @@ section {
   margin: 0;
 }
 
+/* ---------- contacto: diagnóstico + formulario ---------- */
+
+.contacto {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(3rem, 6vw, 6rem) 1.5rem;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  align-items: start;
+  gap: 2rem;
+}
+
+/* ---- diagnóstico de seguridad ---- */
+
+.checklist {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.8rem 1.7rem;
+}
+
+.checklist__title {
+  font-size: 1.15rem;
+  margin: 0 0 0.4rem;
+}
+
+.checklist__intro {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin: 0 0 1.4rem;
+}
+
+.checklist__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.check__label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: start;
+  cursor: pointer;
+}
+
+.check__box {
+  width: 18px;
+  height: 18px;
+  margin: 0.15rem 0 0;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+.check__text { display: flex; flex-direction: column; gap: 0.15rem; }
+
+.check__main {
+  font-size: 0.93rem;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.check__box:checked + .check__text .check__main {
+  color: var(--dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--line);
+}
+
+.check__why {
+  font-size: 0.82rem;
+  color: var(--dim);
+  line-height: 1.4;
+}
+
+.checklist__score {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--blue);
+}
+.checklist__score--ok { color: var(--accent); }
+
+/* ---- formulario ---- */
+
+.contact-form {
+  position: sticky;
+  top: calc(var(--header-h) + 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--blue);
+  color: var(--paper);
+  border-radius: var(--radius-m);
+  padding: 1.8rem 1.7rem;
+  box-shadow: var(--shadow-card);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--paper);
+}
+.field span { opacity: 0.6; }
+
+.field input,
+.field textarea {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  padding: 0.7em 0.9em;
+  border-radius: var(--radius-s);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--paper);
+  resize: vertical;
+}
+.field input::placeholder,
+.field textarea::placeholder { color: rgba(255, 255, 255, 0.5); }
+.field input:focus-visible,
+.field textarea:focus-visible {
+  outline: 2px solid var(--blue-soft);
+  outline-offset: 1px;
+}
+
+.contact-form__cta {
+  width: 100%;
+  background: var(--paper);
+  color: var(--blue);
+}
+.contact-form__cta:hover { background: var(--paper-dim); }
+
+.contact-form__note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--paper);
+  opacity: 0.7;
+  line-height: 1.45;
+}
+.contact-form__note--error {
+  color: var(--blue-soft);
+  opacity: 1;
+  font-weight: 600;
+}
+
 /* ---------- footer ---------- */
 
 .footer {
   text-align: center;
-  padding: clamp(3rem, 6vw, 5rem) 1.5rem clamp(2.5rem, 4vw, 3.5rem);
+  padding: 2.5rem 1.5rem;
   background: var(--blue);
   color: var(--paper);
 }
-.footer__title { color: var(--paper); }
-.footer__lead { color: var(--paper); opacity: 0.85; max-width: 42ch; margin: 0 auto 1.5rem; }
-.footer .btn--primary { background: var(--paper); color: var(--blue); }
-.footer .btn--primary:hover { background: var(--paper-dim); }
 .footer__legal {
-  margin-top: 2.5rem;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--paper);
-  opacity: 0.6;
+  opacity: 0.7;
 }
+.footer__legal a { color: var(--paper); }
 
 /* ---------- responsive ---------- */
 
 @media (max-width: 900px) {
   .steps { grid-template-columns: 1fr; }
 
-  .configurator { grid-template-columns: 1fr; }
-  .summary { position: static; }
+  .configurator,
+  .contact-grid { grid-template-columns: 1fr; }
+  .summary,
+  .contact-form { position: static; }
 }
 
 @media (max-width: 720px) {
@@ -643,10 +800,12 @@ section {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .scroll-arrow {
-    animation: none !important;
-  }
   .btn:hover { transform: none; }
+
+  /* Sin cortinilla: se entra directamente a los precios. */
+  .intro { display: none; }
+  .intro__word,
+  .intro__rule { animation: none; }
 }
 
 /* =========================================================
