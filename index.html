@@ -148,6 +148,10 @@
         <button type="button" class="btn btn--primary summary__cta" id="descargar-enviar">Descargar y enviar</button>
 
         <p class="summary__note" id="summary-status">Te descargas el PDF y nos llega una copia a nosotros, para no perder el hilo.</p>
+        <p class="summary__legal">
+          Presupuesto orientativo, no vinculante. Al enviarlo aceptas la
+          <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.
+        </p>
       </aside>
     </div>
   </section>
@@ -191,6 +195,11 @@
         <ul class="checklist__items" id="checklist-items"></ul>
 
         <p class="checklist__score" id="checklist-score" aria-live="polite"></p>
+
+        <p class="checklist__disclaimer">
+          Autoevaluación orientativa y gratuita, basada solo en lo que marcas aquí. No es una
+          auditoría ni sustituye a una revisión técnica de tus sistemas.
+        </p>
 
         <div class="checklist__cta" id="checklist-cta" hidden>
           <p class="checklist__cta-text"></p>
@@ -321,6 +330,14 @@
           <textarea id="mensaje" name="mensaje" rows="4" placeholder="Cuéntanos qué necesitas o qué dudas tienes."></textarea>
         </label>
 
+        <label class="consent" for="consentimiento">
+          <input type="checkbox" id="consentimiento" required>
+          <span>
+            He leído y acepto la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a>
+            y el tratamiento de mis datos para responder a esta consulta.
+          </span>
+        </label>
+
         <button type="submit" class="btn btn--primary contact-form__cta">Enviar a hola@toka.es</button>
 
         <p class="contact-form__note" id="form-status">
@@ -336,6 +353,10 @@
   <p class="footer__legal">
     © 2026 TOKA · Vitoria-Gasteiz · Ingeniería en ciberseguridad ·
     <a href="mailto:hola@toka.es">hola@toka.es</a>
+  </p>
+  <p class="footer__legal">
+    <a href="aviso-legal.html">Aviso legal</a> ·
+    <a href="privacidad.html">Política de privacidad</a>
   </p>
 </footer>
 

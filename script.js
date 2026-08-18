@@ -629,6 +629,12 @@ function buildQuote() {
 
     <footer class="quote__foot">
       <p>${esc(NOTA_IVA)} Presupuesto válido hasta el ${esc(caduca)}.</p>
+      <p>
+        Documento orientativo y no vinculante, generado automáticamente a partir de los
+        servicios seleccionados. El precio final y el alcance se acuerdan por escrito antes
+        de la contratación. Los puntos de seguridad proceden de una autoevaluación y no
+        constituyen una auditoría.
+      </p>
       <p>¿Lo hablamos? Escríbenos a <strong>${esc(CONTACTO)}</strong> · TOKA, Vitoria-Gasteiz</p>
     </footer>
   `;
@@ -746,6 +752,14 @@ form.addEventListener('submit', (event) => {
     formStatus.textContent = 'Necesitamos un email válido para poder responderte.';
     formStatus.classList.add('contact-form__note--error');
     emailContactoInput.focus();
+    return;
+  }
+
+  const consentimiento = document.getElementById('consentimiento');
+  if (!consentimiento.checked) {
+    formStatus.textContent = 'Necesitamos que aceptes la política de privacidad para poder tratar tus datos.';
+    formStatus.classList.add('contact-form__note--error');
+    consentimiento.focus();
     return;
   }
 
