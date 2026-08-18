@@ -12,7 +12,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Para empezar a sumar reseñas hoy mismo.',
-      price: '39 €',
+      price: '19 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -24,7 +24,7 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Reseñas + wifi sin contraseñas que teclear.',
-      price: '69 €',
+      price: '35 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
@@ -35,7 +35,7 @@ const SECTORS = {
     {
       name: 'Completo',
       desc: 'Tu carta siempre actualizada, sin reimprimir.',
-      price: '99 €',
+      price: '59 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -47,7 +47,7 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu marca y soporte continuo.',
-      price: '149 €',
+      price: '89 €',
       priceNote: 'pago único + 9 €/mes',
       badge: 'Más completo',
       features: [
@@ -62,7 +62,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Consigue más reseñas tras cada cita.',
-      price: '39 €',
+      price: '19 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -74,7 +74,7 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Reseñas + wifi para la sala de espera.',
-      price: '69 €',
+      price: '35 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
@@ -85,7 +85,7 @@ const SECTORS = {
     {
       name: 'Completo',
       desc: 'Catálogo de servicios y precios siempre al día.',
-      price: '99 €',
+      price: '59 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -97,7 +97,7 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu marca y soporte continuo.',
-      price: '149 €',
+      price: '89 €',
       priceNote: 'pago único + 9 €/mes',
       badge: 'Más completo',
       features: [
@@ -112,7 +112,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Más reseñas al final de cada estancia.',
-      price: '39 €',
+      price: '19 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -124,7 +124,7 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Wifi al instante desde la entrada.',
-      price: '69 €',
+      price: '35 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
@@ -135,7 +135,7 @@ const SECTORS = {
     {
       name: 'Completo',
       desc: 'Guía digital del huésped, siempre actualizada.',
-      price: '99 €',
+      price: '59 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -147,7 +147,7 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu alojamiento y soporte continuo.',
-      price: '149 €',
+      price: '89 €',
       priceNote: 'pago único + 9 €/mes',
       badge: 'Más completo',
       features: [
@@ -162,7 +162,7 @@ const SECTORS = {
     {
       name: 'Esencial',
       desc: 'Convierte cada venta en una reseña.',
-      price: '39 €',
+      price: '19 €',
       priceNote: 'pago único',
       features: [
         'Etiqueta NFC física',
@@ -174,7 +174,7 @@ const SECTORS = {
     {
       name: 'Conecta',
       desc: 'Reseñas + wifi para tus clientes en tienda.',
-      price: '69 €',
+      price: '35 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Esencial',
@@ -185,7 +185,7 @@ const SECTORS = {
     {
       name: 'Completo',
       desc: 'Catálogo digital de productos, siempre al día.',
-      price: '99 €',
+      price: '59 €',
       priceNote: 'pago único',
       features: [
         'Todo lo del pack Conecta',
@@ -197,7 +197,7 @@ const SECTORS = {
     {
       name: 'Diseño exclusivo',
       desc: 'Etiqueta a juego con tu marca y soporte continuo.',
-      price: '149 €',
+      price: '89 €',
       priceNote: 'pago único + 9 €/mes',
       badge: 'Más completo',
       features: [
