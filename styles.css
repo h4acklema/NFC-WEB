@@ -1521,3 +1521,12 @@ section {
   line-height: 1.4;
   color: var(--dim);
 }
+
+/* Para qué sirve cada línea del resumen (reseñas, carta…). */
+.summary__for {
+  display: block;
+  margin-top: 0.15rem;
+  font-style: normal;
+  font-size: 0.74rem;
+  opacity: 0.65;
+}

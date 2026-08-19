@@ -420,6 +420,12 @@ function totalTags() {
   return taggableServices().reduce((n, s) => n + tagCounts[s.id], 0);
 }
 
+/** Para qué se usan los soportes de un servicio, con el nombre del sector. */
+function tagPurpose(id) {
+  if (id === 'nfc') return 'Reseñas en Google';
+  return resolveService(serviceById(id), currentSector).name;
+}
+
 /** Unidades adicionales de un servicio: la primera va incluida. */
 function extraTagsOf(id) {
   return Math.max(0, tagCounts[id] - 1);
@@ -629,7 +635,10 @@ function renderSummary() {
       const n = extraTagsOf(s.id);
       // "29 × Tarjeta para la cuenta" evita tener que pluralizar el nombre.
       return `<li class="summary__item">
-         <span>${n} × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}</span>
+         <span>
+           ${n} × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}
+           <em class="summary__for">para ${esc(tagPurpose(s.id))}</em>
+         </span>
          <span class="summary__item-price">${euros(tagsCostOf(s.id))}</span>
        </li>`;
     })
@@ -637,13 +646,17 @@ function renderSummary() {
 
   summaryListEl.innerHTML =
     chosen
-      .map(
-        (s) => `
+      .map((s) => {
+        // Si el servicio lleva soporte, se dice cuál va incluido en su precio.
+        const incluido = s.taggable
+          ? `<em class="summary__for">incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}</em>`
+          : '';
+        return `
         <li class="summary__item">
-          <span>${esc(s.name)}</span>
+          <span>${esc(s.name)}${incluido}</span>
           <span class="summary__item-price">${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}</span>
-        </li>`
-      )
+        </li>`;
+      })
       .join('') + lineaEtiquetas;
 
   summaryOnceEl.textContent = euros(once);
@@ -869,9 +882,9 @@ function buildQuote() {
       const f = TAG_FORMATS[tagFormats[s.id]];
       return `<tr>
          <td>
-           <strong>${n} × ${esc(f.name)}</strong>
-           <span>Para ${s.id === 'catalogo' ? 'la carta' : 'las reseñas'}, además del que ya
-             incluye el servicio. Mismo contenido en todos.
+           <strong>${n} × ${esc(f.name)} — ${esc(tagPurpose(s.id))}</strong>
+           <span>Además del que ya incluye el servicio. Todos llevan el mismo contenido,
+             así que se configura una vez y se replica.
              ${euros(tagsCostOf(s.id) / n)} por unidad.</span>
          </td>
          <td class="quote__cell-price">${euros(tagsCostOf(s.id))}</td>
@@ -886,7 +899,11 @@ function buildQuote() {
         <tr>
           <td>
             <strong>${esc(s.name)}</strong>
-            <span>${esc(s.desc)}</span>
+            <span>${esc(s.desc)}${
+              s.taggable
+                ? ` Incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}.`
+                : ''
+            }</span>
           </td>
           <td class="quote__cell-price">${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}</td>
         </tr>`
@@ -1023,14 +1040,14 @@ function buildEmailBody() {
   taggableServices().forEach((s) => {
     const n = extraTagsOf(s.id);
     if (n) {
-      lineas.push(`- ${n} × ${TAG_FORMATS[tagFormats[s.id]].name}: ${euros(tagsCostOf(s.id))}`);
+      lineas.push(`- ${n} × ${TAG_FORMATS[tagFormats[s.id]].name} — ${tagPurpose(s.id)}: ${euros(tagsCostOf(s.id))}`);
     }
   });
   lineas.push('');
   lineas.push(`Soportes en total: ${totalTags()}`);
   taggableServices().forEach((s) => {
     lineas.push(
-      `  · ${s.id === 'catalogo' ? 'Carta' : 'Reseñas'}: ${tagCounts[s.id]} ` +
+      `  · ${tagPurpose(s.id)}: ${tagCounts[s.id]} ` +
       `en ${TAG_FORMATS[tagFormats[s.id]].name.toLowerCase()}`
     );
   });
