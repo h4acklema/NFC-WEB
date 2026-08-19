@@ -1415,38 +1415,6 @@ section {
   }
   .quote__total--month strong { font-size: 1.15rem; }
 
-  .quote__pending {
-    margin-top: 2rem;
-    padding: 1.1rem 1.3rem;
-    background: #eef3f9;
-    border-left: 3px solid #0d3b66;
-  }
-  .quote__pending h2 {
-    font-family: var(--font-body);
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #5a6b7d;
-    margin: 0 0 0.6rem;
-  }
-  .quote__pending ul {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-  .quote__pending li {
-    font-size: 0.84rem;
-    color: #0c1c2c;
-    padding-left: 1em;
-    position: relative;
-  }
-  .quote__pending li::before {
-    content: '—';
-    position: absolute;
-    left: 0;
-    color: #0d3b66;
-  }
-
   .quote__foot {
     margin-top: 2.5rem;
     padding-top: 1rem;
@@ -1459,66 +1427,88 @@ section {
   }
 }
 
-/* ---- formatos de etiqueta ---- */
+/* ---- filas de formato, una por tipo de soporte ---- */
 
-.formats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.5rem;
-  margin: 1rem 0 0;
-  padding: 0;
-  border: 0;
-}
-
-.formats__legend {
-  padding: 0 0 0.6rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.format {
+.fmts {
   display: flex;
-  gap: 0.55rem;
-  align-items: start;
-  padding: 0.75rem 0.85rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.fmt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding: 0.85rem 1rem;
   border: 1.5px solid var(--line);
   border-radius: var(--radius-s);
   background: #fff;
-  cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
-.format:hover { border-color: var(--accent); }
-.format--on {
+.fmt--on {
   border-color: var(--blue);
   background: var(--paper-dim);
 }
 
-.format input {
-  margin: 0.15rem 0 0;
-  accent-color: var(--blue);
-  cursor: pointer;
+.fmt__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 220px;
+  min-width: 0;
 }
 
-.format__text { display: flex; flex-direction: column; gap: 0.15rem; }
-
-.format__name {
-  font-size: 0.85rem;
+.fmt__name {
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--ink);
 }
-.format__name em {
-  display: block;
-  font-style: normal;
+
+.fmt__price {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  font-weight: 500;
   color: var(--accent);
 }
 
-.format__desc {
+.fmt__desc {
   font-size: 0.78rem;
   line-height: 1.4;
+  color: var(--dim);
+}
+
+.fmt__side {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.fmt__total {
+  min-width: 68px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+/* Servicio destacado y precios "desde". */
+.service--featured {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.service__tag--star {
+  color: var(--accent);
+  background: rgba(33, 118, 199, 0.12);
+}
+.service__from {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
   color: var(--dim);
 }
 
@@ -1529,4 +1519,20 @@ section {
   font-style: normal;
   font-size: 0.74rem;
   opacity: 0.65;
+}
+
+@media (max-width: 620px) {
+  /* El contador cae debajo del texto para no comprimir el nombre. */
+  .fmt__side { width: 100%; justify-content: space-between; }
+  .fmt__total { min-width: auto; }
+}
+
+/* Trampa antispam de Netlify: presente para los robots, oculta para todos los demás. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

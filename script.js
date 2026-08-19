@@ -87,6 +87,15 @@ const SERVICES = [
     price: 11.99,
     unit: 'month',
   },
+  {
+    id: 'resenas',
+    group: 'nfc',
+    name: 'Plan de reseñas',
+    desc: 'La etiqueta trae reseñas; este plan hace que suban. Vigilamos las nuevas, te avisamos el mismo día si entra una negativa, te preparamos la respuesta (Google puntúa que respondas) y cada mes te pasamos un informe con cuántas llevas y cómo va tu nota.',
+    price: 29.99,
+    unit: 'month',
+    featured: 'Lo que más mueve la aguja',
+  },
 
   /* ---- ciberseguridad ----
    * Dos pasos: un informe a precio cerrado y, a partir de lo que
@@ -106,8 +115,9 @@ const SERVICES = [
     id: 'implantacion',
     group: 'seguridad',
     name: 'Implantación de las medidas',
-    desc: 'Dejamos resuelto lo que salga en el informe: separar la red de clientes del TPV, contraseñas, copias de seguridad y formación de tu equipo. El precio depende de lo que haya que hacer, así que se presupuesta al entregar el informe.',
-    unit: 'quote',
+    desc: 'Dejamos resuelto lo que salga en el informe: separar la red de clientes del TPV, contraseñas, copias de seguridad y formación de tu equipo. Este es el punto de partida para un local normal; el importe final se ajusta al entregarte el informe, cuando ya sabemos qué hay.',
+    price: 149.99,
+    unit: 'from',
   },
 ];
 
@@ -379,8 +389,21 @@ let currentSector = 'gastronomia';
  * distintos (en un bar, dos de reseñas en la barra y una por mesa para
  * la carta). Cada servicio incluye ya su primera etiqueta.
  */
-const tagCounts = { nfc: 1, catalogo: 1 };
-const tagFormats = { nfc: 'tarjeta', catalogo: 'soporte' };
+/*
+ * Cantidades por servicio Y por formato: un bar quiere el soporte en la
+ * barra y además tarjetas para dar con la cuenta, así que no vale
+ * obligar a elegir un solo formato por servicio.
+ *
+ * El primer soporte de cada servicio va incluido en su precio (los
+ * 24,99 € del servicio de reseñas son ese soporte puesto), por eso
+ * arranca en 1 y no se cobra.
+ */
+const FORMATO_INCLUIDO = 'soporte';
+
+const tagCounts = {
+  nfc: { soporte: 1, tarjeta: 0, pegatina: 0 },
+  catalogo: { soporte: 1, tarjeta: 0, pegatina: 0 },
+};
 
 /* Servicios que se cobran por hora, con las horas estimadas de partida. */
 const hourCounts = { fotos: 2 };
@@ -420,9 +443,12 @@ function taggableServices() {
   return SERVICES.filter((s) => s.taggable && selected.has(s.id));
 }
 
-/** Etiquetas totales pedidas, sumando todos los usos. */
+/** Soportes totales pedidos, sumando usos y formatos. */
 function totalTags() {
-  return taggableServices().reduce((n, s) => n + tagCounts[s.id], 0);
+  return taggableServices().reduce(
+    (n, s) => n + Object.keys(TAG_FORMATS).reduce((m, fid) => m + tagCounts[s.id][fid], 0),
+    0
+  );
 }
 
 /** Importe de un servicio: por hora se multiplica por las horas estimadas. */
@@ -432,15 +458,36 @@ function lineTotal(s) {
   return s.price;
 }
 
+/** Si algún servicio es una estimación mínima, el total también lo es. */
+function totalEsEstimado() {
+  return selectedServices().some((s) => s.unit === 'from');
+}
+
 /** Para qué se usan los soportes de un servicio, con el nombre del sector. */
 function tagPurpose(id) {
   if (id === 'nfc') return 'Reseñas en Google';
   return resolveService(serviceById(id), currentSector).name;
 }
 
-/** Unidades adicionales de un servicio: la primera va incluida. */
-function extraTagsOf(id) {
-  return Math.max(0, tagCounts[id] - 1);
+/** Unidades de un formato que se cobran: del incluido, la primera es gratis. */
+function chargeableOf(sid, fid) {
+  const n = tagCounts[sid][fid];
+  return fid === FORMATO_INCLUIDO ? Math.max(0, n - 1) : n;
+}
+
+/** Lo que cuesta un formato dentro de un servicio. */
+function costOf(sid, fid) {
+  return formatCost(chargeableOf(sid, fid), TAG_FORMATS[fid].tiers);
+}
+
+/** Formatos de un servicio con alguna unidad pedida. */
+function formatsWithUnits(sid) {
+  return Object.keys(TAG_FORMATS).filter((fid) => tagCounts[sid][fid] > 0);
+}
+
+/** Unidades adicionales de un servicio, sumando formatos. */
+function extraTagsOf(sid) {
+  return Object.keys(TAG_FORMATS).reduce((n, fid) => n + chargeableOf(sid, fid), 0);
 }
 
 /** Unidades adicionales de todos los servicios juntos. */
@@ -448,9 +495,11 @@ function extraTags() {
   return taggableServices().reduce((n, s) => n + extraTagsOf(s.id), 0);
 }
 
-/** Lo que cuestan las unidades adicionales de un servicio. */
-function tagsCostOf(id) {
-  return formatCost(extraTagsOf(id), TAG_FORMATS[tagFormats[id]].tiers);
+/** Lo que cuestan los soportes adicionales de un servicio. */
+function tagsCostOf(sid) {
+  return redondea(
+    Object.keys(TAG_FORMATS).reduce((sum, fid) => sum + costOf(sid, fid), 0)
+  );
 }
 
 /** Lo que suman los soportes adicionales de todo el pedido. */
@@ -464,7 +513,7 @@ function totals() {
     // Los servicios 'quote' se listan pero no suman: su importe aún no existe.
     once: redondea(
       chosen
-        .filter((s) => s.unit === 'once')
+        .filter((s) => s.unit === 'once' || s.unit === 'from')
         .reduce((sum, s) => sum + s.price, 0) +
         chosen.filter((s) => s.unit === 'hour').reduce((sum, s) => sum + lineTotal(s), 0) +
         tagsCost()
@@ -494,55 +543,60 @@ const listEl = document.getElementById('service-list');
 const tabs = Array.from(document.querySelectorAll('.tab'));
 
 /*
- * Selector de cantidad, uno por cada servicio con etiqueta física.
- * Va fuera del <label> a propósito: unos botones dentro de una
- * etiqueta asociada a la casilla harían que pulsarlos marcasen
- * también la casilla.
+ * Selector de soportes: una fila por formato con su propia cantidad,
+ * porque un mismo servicio suele necesitar varios a la vez (el soporte
+ * de la barra y las tarjetas que se dan con la cuenta).
+ *
+ * Va fuera del <label> a propósito: unos botones dentro de una etiqueta
+ * asociada a la casilla harían que pulsarlos marcasen también la casilla.
  */
 function qtyMarkup(s) {
   const hint = s.id === 'catalogo' ? SECTORS[currentSector].cartaUnit : s.tagHint;
 
+  const filas = Object.entries(TAG_FORMATS)
+    .map(([fid, f]) => {
+      const n = tagCounts[s.id][fid];
+      const incluido = fid === FORMATO_INCLUIDO;
+      const desde = f.tiers[0].precio;
+      const baja = f.tiers.length > 1 ? f.tiers[f.tiers.length - 1].precio : null;
+
+      const precio = baja
+        ? `${euros(desde)} / ud. · hasta ${euros(baja)} por volumen`
+        : `${euros(desde)} / ud.`;
+
+      const cobrado = chargeableOf(s.id, fid);
+
+      return `
+        <li class="fmt${n > 0 ? ' fmt--on' : ''}">
+          <div class="fmt__info">
+            <span class="fmt__name">${esc(f.name)}</span>
+            <span class="fmt__price">${precio}${incluido ? ' · el primero incluido' : ''}</span>
+            <span class="fmt__desc">${esc(f.desc)}</span>
+          </div>
+          <div class="fmt__side">
+            <div class="qty__control">
+              <button type="button" class="qty__btn" data-qty="${s.id}" data-fmt="${fid}"
+                data-step="-1" aria-label="Quitar un ${esc(f.name)}">−</button>
+              <input class="qty__input" type="number" id="qty-${s.id}-${fid}"
+                data-qty="${s.id}" data-fmt="${fid}" inputmode="numeric"
+                min="0" max="${MAX_TAGS}" value="${n}"
+                aria-label="${esc(f.name)} para ${esc(tagPurpose(s.id))}">
+              <button type="button" class="qty__btn" data-qty="${s.id}" data-fmt="${fid}"
+                data-step="1" aria-label="Añadir un ${esc(f.name)}">+</button>
+            </div>
+            <span class="fmt__total">${cobrado > 0 ? euros(costOf(s.id, fid)) : '—'}</span>
+          </div>
+        </li>`;
+    })
+    .join('');
+
   return `
     <div class="qty">
-      <div class="qty__row">
-        <span class="qty__label">
-          ¿Cuántas etiquetas?
-          <em>${esc(hint)}</em>
-        </span>
-        <div class="qty__control">
-          <button type="button" class="qty__btn" data-qty="${s.id}" data-step="-1"
-            aria-label="Quitar una etiqueta">−</button>
-          <input class="qty__input" type="number" id="qty-${s.id}" data-qty="${s.id}"
-            inputmode="numeric" min="1" max="${MAX_TAGS}" value="${tagCounts[s.id]}"
-            aria-label="Número de etiquetas de ${esc(s.name)}">
-          <button type="button" class="qty__btn" data-qty="${s.id}" data-step="1"
-            aria-label="Añadir una etiqueta">+</button>
-        </div>
-      </div>
-
-      <fieldset class="formats">
-        <legend class="formats__legend">¿En qué formato?</legend>
-        ${Object.entries(TAG_FORMATS)
-          .map(([key, f]) => {
-            const activo = tagFormats[s.id] === key;
-            const desde = f.tiers[0].precio;
-            const baja = f.tiers.length > 1 ? f.tiers[f.tiers.length - 1].precio : null;
-            const extra = baja
-              ? `${euros(desde)} / ud. · desde ${euros(baja)} por volumen`
-              : `${euros(desde)} / ud.`;
-            return `
-              <label class="format${activo ? ' format--on' : ''}" for="fmt-${s.id}-${key}">
-                <input type="radio" id="fmt-${s.id}-${key}" name="fmt-${s.id}"
-                  data-fmt="${s.id}" value="${key}" ${activo ? 'checked' : ''}>
-                <span class="format__text">
-                  <span class="format__name">${esc(f.name)} <em>${extra}</em></span>
-                  <span class="format__desc">${esc(f.desc)}</span>
-                </span>
-              </label>`;
-          })
-          .join('')}
-      </fieldset>
-
+      <p class="qty__label">
+        ¿Qué soportes quieres?
+        <em>${esc(hint)}</em>
+      </p>
+      <ul class="fmts">${filas}</ul>
       <p class="qty__detail" id="qty-detail-${s.id}" aria-live="polite"></p>
     </div>
   `;
@@ -579,11 +633,12 @@ function serviceMarkup(raw) {
   let priceLabel;
   if (s.unit === 'month') priceLabel = `${euros(s.price)}<span>/mes</span>`;
   else if (s.unit === 'hour') priceLabel = `${euros(s.price)}<span>/hora</span>`;
+  else if (s.unit === 'from') priceLabel = `<span class="service__from">desde</span>${euros(s.price)}`;
   else if (s.unit === 'quote') priceLabel = '<span class="service__quote">A presupuestar</span>';
   else priceLabel = euros(s.price);
 
   return `
-    <li class="service${s.required ? ' service--required' : ''}">
+    <li class="service${s.required ? ' service--required' : ''}${s.featured ? ' service--featured' : ''}">
       <label class="service__label" for="svc-${s.id}">
         <input
           class="service__check"
@@ -596,6 +651,7 @@ function serviceMarkup(raw) {
           <span class="service__name">
             ${esc(s.name)}
             ${s.required ? '<span class="service__tag">Siempre incluido</span>' : ''}
+            ${s.featured ? `<span class="service__tag service__tag--star">${esc(s.featured)}</span>` : ''}
           </span>
           <span class="service__desc">${esc(s.desc)}</span>
         </span>
@@ -608,37 +664,41 @@ function serviceMarkup(raw) {
 }
 
 /**
- * Texto de apoyo de cada selector: lo que suman sus soportes y cuántos
- * faltan para que baje el precio. Se actualiza sin repintar la lista,
- * para no perder el foco mientras se teclea la cantidad.
+ * Texto de apoyo de cada servicio: qué se lleva y cuántas unidades
+ * faltan para que baje algún formato. Se actualiza sin repintar la
+ * lista, para no perder el foco mientras se teclea la cantidad.
  */
 function renderQtyDetail() {
   taggableServices().forEach((s) => {
     const detalle = document.getElementById(`qty-detail-${s.id}`);
     if (!detalle) return;
 
-    const formato = TAG_FORMATS[tagFormats[s.id]];
-    const extras = extraTagsOf(s.id);
+    const total = Object.keys(TAG_FORMATS).reduce((n, fid) => n + tagCounts[s.id][fid], 0);
+    const coste = tagsCostOf(s.id);
 
-    if (extras === 0) {
-      detalle.textContent =
-        `El primero va incluido en el servicio. ` +
-        `Cada uno de más: ${euros(formato.tiers[0].precio)}.`;
+    if (total === 0) {
+      detalle.textContent = 'Sin soportes seleccionados para este servicio.';
       return;
     }
 
-    const coste = tagsCostOf(s.id);
-    const medio = euros(coste / extras);
-    const siguiente = nextTierInfo(extras, formato.tiers);
-
     const partes = [
-      `${extras} × ${formato.name}: ${euros(coste)} (${medio} cada uno).`,
+      `${total} ${total === 1 ? 'soporte' : 'soportes'} para ${tagPurpose(s.id)}: ` +
+        `${coste === 0 ? 'sin coste añadido' : euros(coste)}.`,
     ];
 
-    if (siguiente) {
-      partes.push(
-        `Con ${siguiente.faltan} más, todos bajan a ${euros(siguiente.precio)}.`
-      );
+    // Solo se avisa del tramo del formato del que más unidades se piden.
+    const conTramos = formatsWithUnits(s.id)
+      .filter((fid) => TAG_FORMATS[fid].tiers.length > 1)
+      .sort((a, b) => chargeableOf(s.id, b) - chargeableOf(s.id, a))[0];
+
+    if (conTramos) {
+      const siguiente = nextTierInfo(chargeableOf(s.id, conTramos), TAG_FORMATS[conTramos].tiers);
+      if (siguiente) {
+        partes.push(
+          `Con ${siguiente.faltan} ${TAG_FORMATS[conTramos].name.toLowerCase()} más, ` +
+            `todas bajan a ${euros(siguiente.precio)}.`
+        );
+      }
     }
 
     detalle.textContent = partes.join(' ');
@@ -697,18 +757,21 @@ function renderSummary() {
   const { once, month } = totals();
 
   const lineaEtiquetas = taggableServices()
-    .filter((s) => extraTagsOf(s.id) > 0)
-    .map((s) => {
-      const n = extraTagsOf(s.id);
-      // "29 × Tarjeta para la cuenta" evita tener que pluralizar el nombre.
-      return `<li class="summary__item">
-         <span>
-           ${n} × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}
-           <em class="summary__for">para ${esc(tagPurpose(s.id))}</em>
-         </span>
-         <span class="summary__item-price">${euros(tagsCostOf(s.id))}</span>
-       </li>`;
-    })
+    .flatMap((s) =>
+      Object.keys(TAG_FORMATS)
+        .filter((fid) => chargeableOf(s.id, fid) > 0)
+        .map((fid) => {
+          const n = chargeableOf(s.id, fid);
+          // "20 × Tarjeta para la cuenta" evita pluralizar el nombre.
+          return `<li class="summary__item">
+             <span>
+               ${n} × ${esc(TAG_FORMATS[fid].name)}
+               <em class="summary__for">para ${esc(tagPurpose(s.id))}</em>
+             </span>
+             <span class="summary__item-price">${euros(costOf(s.id, fid))}</span>
+           </li>`;
+        })
+    )
     .join('');
 
   summaryListEl.innerHTML =
@@ -717,7 +780,9 @@ function renderSummary() {
         // Si el servicio lleva soporte, se dice cuál va incluido en su precio.
         let nota = '';
         if (s.taggable) {
-          nota = `<em class="summary__for">incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}</em>`;
+          nota = `<em class="summary__for">incluye 1 × ${esc(TAG_FORMATS[FORMATO_INCLUIDO].name)}</em>`;
+        } else if (s.unit === 'from') {
+          nota = '<em class="summary__for">estimación mínima, se ajusta tras el informe</em>';
         } else if (s.unit === 'hour') {
           nota = `<em class="summary__for">${hourCounts[s.id]} h × ${euros(s.price)}</em>`;
         } else if (s.unit === 'quote') {
@@ -824,15 +889,25 @@ function update() {
   renderChecklist();
 }
 
-/** Cambia la cantidad de un servicio sin repintar la lista entera. */
-function setTagCount(id, valor) {
-  if (!(id in tagCounts)) return;
+/** Cambia la cantidad de un formato sin repintar la lista entera. */
+function setTagCount(sid, fid, valor) {
+  if (!tagCounts[sid] || !(fid in tagCounts[sid])) return;
 
-  const n = Math.min(MAX_TAGS, Math.max(1, Math.round(Number(valor) || 1)));
-  tagCounts[id] = n;
+  // El formato incluido no baja de 1: ese soporte va en el precio del servicio.
+  const minimo = fid === FORMATO_INCLUIDO ? 1 : 0;
+  const n = Math.min(MAX_TAGS, Math.max(minimo, Math.round(Number(valor) || 0)));
+  tagCounts[sid][fid] = n;
 
-  const input = document.getElementById(`qty-${id}`);
+  const input = document.getElementById(`qty-${sid}-${fid}`);
   if (input && Number(input.value) !== n) input.value = n;
+
+  // El importe de la fila y su estado sí se refrescan al momento.
+  const fila = input?.closest('.fmt');
+  if (fila) {
+    fila.classList.toggle('fmt--on', n > 0);
+    const cobrado = chargeableOf(sid, fid);
+    fila.querySelector('.fmt__total').textContent = cobrado > 0 ? euros(costOf(sid, fid)) : '—';
+  }
 
   renderQtyDetail();
   renderSummary();
@@ -841,15 +916,6 @@ function setTagCount(id, valor) {
 /* ---------- interacción ---------- */
 
 listEl.addEventListener('change', (event) => {
-  const formato = event.target.closest('input[data-fmt]');
-  if (formato) {
-    tagFormats[formato.dataset.fmt] = formato.value;
-    renderServices();
-    renderQtyDetail();
-    renderSummary();
-    return;
-  }
-
   const horas = event.target.closest('input[data-hours]');
   if (horas) {
     setHours(horas.dataset.hours, horas.value);
@@ -858,7 +924,7 @@ listEl.addEventListener('change', (event) => {
 
   const cantidad = event.target.closest('.qty__input');
   if (cantidad) {
-    setTagCount(cantidad.dataset.qty, cantidad.value);
+    setTagCount(cantidad.dataset.qty, cantidad.dataset.fmt, cantidad.value);
     return;
   }
 
@@ -883,7 +949,7 @@ listEl.addEventListener('input', (event) => {
   const campo = event.target.closest('.qty__input');
   if (!campo) return;
   if (campo.dataset.hours) setHours(campo.dataset.hours, campo.value);
-  else setTagCount(campo.dataset.qty, campo.value);
+  else setTagCount(campo.dataset.qty, campo.dataset.fmt, campo.value);
 });
 
 listEl.addEventListener('click', (event) => {
@@ -896,8 +962,9 @@ listEl.addEventListener('click', (event) => {
     return;
   }
 
-  const id = boton.dataset.qty;
-  setTagCount(id, tagCounts[id] + Number(boton.dataset.step));
+  const sid = boton.dataset.qty;
+  const fid = boton.dataset.fmt;
+  setTagCount(sid, fid, tagCounts[sid][fid] + Number(boton.dataset.step));
 });
 
 checklistEl.addEventListener('change', (event) => {
@@ -961,7 +1028,6 @@ function buildQuote() {
   const chosen = selectedServices();
   const { once, month } = totals();
   const negocio = businessInput.value.trim();
-  const pendientes = activeChecks().filter((c) => checkState(c) === 'pending');
 
   const hoy = new Date();
   const fecha = hoy.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -972,20 +1038,23 @@ function buildQuote() {
   });
 
   const filaEtiquetas = taggableServices()
-    .filter((s) => extraTagsOf(s.id) > 0)
-    .map((s) => {
-      const n = extraTagsOf(s.id);
-      const f = TAG_FORMATS[tagFormats[s.id]];
-      return `<tr>
-         <td>
-           <strong>${n} × ${esc(f.name)} — ${esc(tagPurpose(s.id))}</strong>
-           <span>Además del que ya incluye el servicio. Todos llevan el mismo contenido,
-             así que se configura una vez y se replica.
-             ${euros(tagsCostOf(s.id) / n)} por unidad.</span>
-         </td>
-         <td class="quote__cell-price">${euros(tagsCostOf(s.id))}</td>
-       </tr>`;
-    })
+    .flatMap((s) =>
+      Object.keys(TAG_FORMATS)
+        .filter((fid) => chargeableOf(s.id, fid) > 0)
+        .map((fid) => {
+          const n = chargeableOf(s.id, fid);
+          const f = TAG_FORMATS[fid];
+          const coste = costOf(s.id, fid);
+          return `<tr>
+             <td>
+               <strong>${n} × ${esc(f.name)} — ${esc(tagPurpose(s.id))}</strong>
+               <span>${esc(f.desc)} Todos llevan el mismo contenido, así que se
+                 configura una vez y se replica. ${euros(coste / n)} por unidad.</span>
+             </td>
+             <td class="quote__cell-price">${euros(coste)}</td>
+           </tr>`;
+        })
+    )
     .join('');
 
   const filas =
@@ -996,7 +1065,7 @@ function buildQuote() {
           <td>
             <strong>${esc(s.name)}</strong>
             <span>${esc(s.desc)}${
-              s.taggable ? ` Incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}.` : ''
+              s.taggable ? ` Incluye 1 × ${esc(TAG_FORMATS[FORMATO_INCLUIDO].name)}.` : ''
             }${
               s.unit === 'hour'
                 ? ` Estimadas ${hourCounts[s.id]} h a ${euros(s.price)} la hora.`
@@ -1013,14 +1082,6 @@ function buildQuote() {
         </tr>`
       )
       .join('') + filaEtiquetas;
-
-  const bloquePendientes = pendientes.length
-    ? `
-      <section class="quote__pending">
-        <h2>Puntos de seguridad pendientes</h2>
-        <ul>${pendientes.map((c) => `<li>${esc(c.text)}</li>`).join('')}</ul>
-      </section>`
-    : '';
 
   quoteEl.innerHTML = `
     <header class="quote__head">
@@ -1043,15 +1104,13 @@ function buildQuote() {
       ${month > 0 ? `<p class="quote__total quote__total--month"><span>Después</span> <strong>${euros(month)}/mes</strong></p>` : ''}
     </div>
 
-    ${bloquePendientes}
 
     <footer class="quote__foot">
       <p>${esc(NOTA_IVA)} Presupuesto válido hasta el ${esc(caduca)}.</p>
       <p>
         Documento orientativo y no vinculante, generado automáticamente a partir de los
         servicios seleccionados. El precio final y el alcance se acuerdan por escrito antes
-        de la contratación. Los puntos de seguridad proceden de una autoevaluación y no
-        constituyen una auditoría.
+        de la contratación.
       </p>
       <p>¿Lo hablamos? Escríbenos a <strong>${esc(CONTACTO)}</strong> · Gertu, Vitoria-Gasteiz</p>
     </footer>
@@ -1080,6 +1139,19 @@ const descargarEnviarBtn = document.getElementById('descargar-enviar');
   });
 });
 
+/*
+ * Envío del formulario.
+ *
+ * En producción lo recoge Netlify Forms: se hace POST del propio
+ * formulario por fetch, sin recargar la página, y el aviso llega al
+ * correo configurado en Netlify sin que el visitante tenga que hacer
+ * nada más.
+ *
+ * Fuera de Netlify (abriendo el archivo en local, o si el POST falla)
+ * se recurre al programa de correo del visitante, para no perder el
+ * contacto por un problema de infraestructura.
+ */
+
 function abrirCorreo() {
   const negocio = businessInput.value.trim();
   const asunto = negocio ? `Presupuesto Gertu — ${negocio}` : 'Presupuesto Gertu';
@@ -1088,6 +1160,27 @@ function abrirCorreo() {
     `mailto:${CONTACTO}` +
     `?subject=${encodeURIComponent(asunto)}` +
     `&body=${encodeURIComponent(buildEmailBody())}`;
+}
+
+/** Vuelca el presupuesto en los campos ocultos que viajan con el formulario. */
+function rellenarCamposOcultos() {
+  const { once, month } = totals();
+  document.getElementById('hidden-negocio').value = businessInput.value.trim();
+  document.getElementById('hidden-total').value =
+    `${euros(once)}${month > 0 ? ` + ${euros(month)}/mes` : ''}`;
+  document.getElementById('hidden-presupuesto').value = buildEmailBody();
+}
+
+async function enviarFormulario() {
+  rellenarCamposOcultos();
+
+  const respuesta = await fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(new FormData(form)).toString(),
+  });
+
+  if (!respuesta.ok) throw new Error(`Netlify respondió ${respuesta.status}`);
 }
 
 /*
@@ -1111,10 +1204,16 @@ descargarEnviarBtn.addEventListener('click', () => {
   buildQuote();
   window.print();
 
-  setTimeout(() => {
-    abrirCorreo();
-    summaryStatus.textContent = 'PDF descargado. Ahora se abre tu correo con la copia para nosotros.';
-  }, 600);
+  summaryStatus.textContent = 'PDF descargado. Enviándonos la copia…';
+
+  enviarFormulario()
+    .then(() => {
+      summaryStatus.textContent = 'PDF descargado y copia enviada. Te escribimos enseguida.';
+    })
+    .catch(() => {
+      summaryStatus.textContent = 'PDF descargado. Ahora se abre tu correo con la copia para nosotros.';
+      setTimeout(abrirCorreo, 400);
+    });
 });
 
 function buildEmailBody() {
@@ -1147,18 +1246,23 @@ function buildEmailBody() {
   });
 
   taggableServices().forEach((s) => {
-    const n = extraTagsOf(s.id);
-    if (n) {
-      lineas.push(`- ${n} × ${TAG_FORMATS[tagFormats[s.id]].name} — ${tagPurpose(s.id)}: ${euros(tagsCostOf(s.id))}`);
-    }
+    Object.keys(TAG_FORMATS).forEach((fid) => {
+      const n = chargeableOf(s.id, fid);
+      if (n) {
+        lineas.push(
+          `- ${n} × ${TAG_FORMATS[fid].name} — ${tagPurpose(s.id)}: ${euros(costOf(s.id, fid))}`
+        );
+      }
+    });
   });
+
   lineas.push('');
   lineas.push(`Soportes en total: ${totalTags()}`);
   taggableServices().forEach((s) => {
-    lineas.push(
-      `  · ${tagPurpose(s.id)}: ${tagCounts[s.id]} ` +
-      `en ${TAG_FORMATS[tagFormats[s.id]].name.toLowerCase()}`
-    );
+    const detalle = formatsWithUnits(s.id)
+      .map((fid) => `${tagCounts[s.id][fid]} × ${TAG_FORMATS[fid].name}`)
+      .join(', ');
+    if (detalle) lineas.push(`  · ${tagPurpose(s.id)}: ${detalle}`);
   });
   lineas.push(`Total pago único: ${euros(once)}`);
   if (month > 0) lineas.push(`Cuota mensual: ${euros(month)}/mes`);
@@ -1201,8 +1305,18 @@ form.addEventListener('submit', (event) => {
   }
 
   formStatus.classList.remove('contact-form__note--error');
-  abrirCorreo();
-  formStatus.textContent = 'Abriendo tu programa de correo con todo escrito. Solo tienes que darle a enviar.';
+  formStatus.textContent = 'Enviando…';
+
+  enviarFormulario()
+    .then(() => {
+      formStatus.textContent = '¡Recibido! Te respondemos en menos de 24 horas.';
+      form.reset();
+    })
+    .catch(() => {
+      // Sin servidor detrás: al menos que el visitante pueda escribirnos.
+      formStatus.textContent = 'Abriendo tu programa de correo para enviarlo.';
+      abrirCorreo();
+    });
 });
 
 /* ---------- menú móvil ---------- */

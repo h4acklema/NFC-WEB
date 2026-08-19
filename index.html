@@ -320,7 +320,22 @@
         </p>
       </div>
 
-      <form class="contact-form" id="contact-form" novalidate>
+      <!--
+        Netlify detecta el formulario al desplegar leyendo este HTML, por eso
+        los campos ocultos del presupuesto están declarados aquí y no los crea
+        el JS. El envío va por fetch para no recargar la página; si falla
+        (por ejemplo abriendo el archivo en local, fuera de Netlify), el JS
+        recurre al programa de correo del visitante.
+      -->
+      <form class="contact-form" id="contact-form" name="presupuesto" method="POST"
+        data-netlify="true" netlify-honeypot="bot-field" novalidate>
+        <input type="hidden" name="form-name" value="presupuesto">
+        <p class="visually-hidden">
+          <label>No rellenes esto: <input name="bot-field"></label>
+        </p>
+        <input type="hidden" name="negocio" id="hidden-negocio">
+        <input type="hidden" name="total" id="hidden-total">
+        <input type="hidden" name="presupuesto" id="hidden-presupuesto">
         <label class="field" for="email-contacto">
           Tu email
           <input type="email" id="email-contacto" name="email" required placeholder="tucorreo@ejemplo.com" autocomplete="email">
