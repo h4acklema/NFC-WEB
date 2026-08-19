@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://gertu.link/sitemap.xml
+Sitemap: https://gertu.netlify.app/sitemap.xml
