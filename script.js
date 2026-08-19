@@ -1171,7 +1171,45 @@ function rellenarCamposOcultos() {
   document.getElementById('hidden-presupuesto').value = buildEmailBody();
 }
 
+/*
+ * Límite de envíos por navegador.
+ *
+ * No sustituye al filtro antispam de Netlify ni al reCAPTCHA, que son
+ * los que paran a un bot de verdad: esto corta los envíos repetidos por
+ * impaciencia o por un clic doble, que son la mayoría del ruido, y evita
+ * que alguien vacíe la cuota mensual de formularios a base de recargar.
+ */
+const LIMITE_ENVIOS = 5;
+const VENTANA_MINUTOS = 30;
+
+function enviosRecientes() {
+  try {
+    const previos = JSON.parse(localStorage.getItem('gertu-envios') || '[]');
+    const desde = Date.now() - VENTANA_MINUTOS * 60000;
+    return previos.filter((fecha) => fecha > desde);
+  } catch {
+    return [];
+  }
+}
+
+function puedeEnviar() {
+  return enviosRecientes().length < LIMITE_ENVIOS;
+}
+
+function apuntaEnvio() {
+  try {
+    localStorage.setItem('gertu-envios', JSON.stringify([...enviosRecientes(), Date.now()]));
+  } catch {
+    // Si el navegador bloquea el almacenamiento, no se limita: mejor
+    // dejar pasar un envío de más que perder un cliente real.
+  }
+}
+
 async function enviarFormulario() {
+  if (!puedeEnviar()) {
+    throw new Error('limite');
+  }
+
   rellenarCamposOcultos();
 
   const respuesta = await fetch('/', {
@@ -1181,6 +1219,8 @@ async function enviarFormulario() {
   });
 
   if (!respuesta.ok) throw new Error(`Netlify respondió ${respuesta.status}`);
+
+  apuntaEnvio();
 }
 
 /*
@@ -1210,7 +1250,11 @@ descargarEnviarBtn.addEventListener('click', () => {
     .then(() => {
       summaryStatus.textContent = 'PDF descargado y copia enviada. Te escribimos enseguida.';
     })
-    .catch(() => {
+    .catch((error) => {
+      if (error.message === 'limite') {
+        summaryStatus.textContent = 'PDF descargado. Ya nos has enviado varias copias, no hace falta más.';
+        return;
+      }
       summaryStatus.textContent = 'PDF descargado. Ahora se abre tu correo con la copia para nosotros.';
       setTimeout(abrirCorreo, 400);
     });
@@ -1307,12 +1351,24 @@ form.addEventListener('submit', (event) => {
   formStatus.classList.remove('contact-form__note--error');
   formStatus.textContent = 'Enviando…';
 
+  const boton = form.querySelector('.contact-form__cta');
+  boton.disabled = true;
+
   enviarFormulario()
+    .finally(() => {
+      boton.disabled = false;
+    })
     .then(() => {
       formStatus.textContent = '¡Recibido! Te respondemos en menos de 24 horas.';
       form.reset();
     })
-    .catch(() => {
+    .catch((error) => {
+      if (error.message === 'limite') {
+        formStatus.textContent =
+          'Ya nos has escrito varias veces. Estamos en ello: si es urgente, llámanos.';
+        formStatus.classList.add('contact-form__note--error');
+        return;
+      }
       // Sin servidor detrás: al menos que el visitante pueda escribirnos.
       formStatus.textContent = 'Abriendo tu programa de correo para enviarlo.';
       abrirCorreo();

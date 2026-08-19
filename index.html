@@ -328,7 +328,8 @@
         recurre al programa de correo del visitante.
       -->
       <form class="contact-form" id="contact-form" name="presupuesto" method="POST"
-        data-netlify="true" netlify-honeypot="bot-field" novalidate>
+        data-netlify="true" netlify-honeypot="bot-field"
+        data-netlify-recaptcha="true" novalidate>
         <input type="hidden" name="form-name" value="presupuesto">
         <p class="visually-hidden">
           <label>No rellenes esto: <input name="bot-field"></label>
@@ -358,6 +359,9 @@
             y el tratamiento de mis datos para responder a esta consulta.
           </span>
         </label>
+
+        <!-- Netlify sustituye esto por el widget al desplegar. En local no se ve. -->
+        <div data-netlify-recaptcha="true"></div>
 
         <button type="submit" class="btn btn--primary contact-form__cta">Enviar mensaje</button>
 
