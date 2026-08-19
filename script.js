@@ -30,7 +30,7 @@ const SERVICES = [
     group: 'nfc',
     name: 'Etiqueta NFC + reseñas en Google',
     desc: 'Tu página con enlace directo a tus reseñas y el primer soporte ya programado y puesto. Es la base de todo lo demás.',
-    price: 25,
+    price: 24.99,
     unit: 'once',
     required: true,
     taggable: true,
@@ -41,7 +41,7 @@ const SERVICES = [
     group: 'nfc',
     name: 'Wifi para tus clientes',
     desc: 'Conexión automática en Android. En iPhone, la red y la clave aparecen listas para copiar, sin teclearlas.',
-    price: 20,
+    price: 19.99,
     unit: 'once',
   },
   {
@@ -49,7 +49,7 @@ const SERVICES = [
     group: 'nfc',
     name: 'Carta digital',
     desc: 'Tu carta con precios, editable siempre que quieras sin volver a imprimir nada.',
-    price: 30,
+    price: 29.99,
     unit: 'once',
     taggable: true,
     tagHint: 'una por mesa',
@@ -59,7 +59,7 @@ const SERVICES = [
     group: 'nfc',
     name: 'Web completa para tu negocio',
     desc: '¿Todavía no tienes web? Te montamos una, con tus servicios, horario, ubicación y contacto. Tuya, sin plantillas de terceros.',
-    price: 180,
+    price: 179.99,
     unit: 'once',
   },
   {
@@ -67,7 +67,7 @@ const SERVICES = [
     group: 'nfc',
     name: 'Diseño exclusivo de la tarjeta',
     desc: 'Tarjeta NFC con tu logo, tus colores y tu marca, en lugar del modelo estándar.',
-    price: 45,
+    price: 44.99,
     unit: 'once',
   },
   {
@@ -75,15 +75,16 @@ const SERVICES = [
     group: 'nfc',
     name: 'Sesión de fotos',
     desc: 'Vamos a tu local y hacemos las fotos para tu carta o tu web. Si ya tienes fotos propias, no lo necesitas.',
-    price: 60,
-    unit: 'once',
+    price: 39.99,
+    unit: 'hour',
+    hourly: true,
   },
   {
     id: 'mantenimiento',
     group: 'nfc',
     name: 'Mantenimiento y cambios ilimitados',
     desc: 'Nos ocupamos nosotros de tus actualizaciones siempre que las necesites. Sin permanencia, te das de baja cuando quieras.',
-    price: 12,
+    price: 11.99,
     unit: 'month',
   },
 
@@ -98,7 +99,7 @@ const SERVICES = [
     group: 'seguridad',
     name: 'Informe de seguridad',
     desc: 'Vamos a tu negocio y revisamos router, redes, TPV, dispositivos y cuentas. Te entregamos un informe escrito con todo lo que hay que arreglar, ordenado por urgencia y explicado sin tecnicismos.',
-    price: 200,
+    price: 199.99,
     unit: 'once',
   },
   {
@@ -132,7 +133,7 @@ const TAG_FORMATS = {
   soporte: {
     name: 'Soporte de mostrador',
     desc: 'Peana rígida que se queda de pie en el mostrador o en la mesa. La que ve todo el mundo al entrar.',
-    tiers: [{ desde: 1, precio: 15 }],
+    tiers: [{ desde: 1, precio: 14.99 }],
   },
   tarjeta: {
     name: 'Tarjeta para la cuenta',
@@ -155,6 +156,7 @@ const TAG_FORMATS = {
 };
 
 const MAX_TAGS = 200;
+const MAX_HOURS = 12;
 
 const redondea = (n) => Math.round(n * 100) / 100;
 
@@ -380,6 +382,9 @@ let currentSector = 'gastronomia';
 const tagCounts = { nfc: 1, catalogo: 1 };
 const tagFormats = { nfc: 'tarjeta', catalogo: 'soporte' };
 
+/* Servicios que se cobran por hora, con las horas estimadas de partida. */
+const hourCounts = { fotos: 2 };
+
 /* ---------- helpers ---------- */
 
 const euros = (n) => {
@@ -420,6 +425,13 @@ function totalTags() {
   return taggableServices().reduce((n, s) => n + tagCounts[s.id], 0);
 }
 
+/** Importe de un servicio: por hora se multiplica por las horas estimadas. */
+function lineTotal(s) {
+  if (s.unit === 'hour') return redondea(s.price * hourCounts[s.id]);
+  if (s.unit === 'quote') return 0;
+  return s.price;
+}
+
 /** Para qué se usan los soportes de un servicio, con el nombre del sector. */
 function tagPurpose(id) {
   if (id === 'nfc') return 'Reseñas en Google';
@@ -449,11 +461,15 @@ function tagsCost() {
 function totals() {
   const chosen = selectedServices();
   return {
-    once:
-      chosen.filter((s) => s.unit === 'once').reduce((sum, s) => sum + s.price, 0) +
-      tagsCost(),
     // Los servicios 'quote' se listan pero no suman: su importe aún no existe.
-    month: chosen.filter((s) => s.unit === 'month').reduce((sum, s) => sum + s.price, 0),
+    once: redondea(
+      chosen
+        .filter((s) => s.unit === 'once')
+        .reduce((sum, s) => sum + s.price, 0) +
+        chosen.filter((s) => s.unit === 'hour').reduce((sum, s) => sum + lineTotal(s), 0) +
+        tagsCost()
+    ),
+    month: redondea(chosen.filter((s) => s.unit === 'month').reduce((sum, s) => sum + s.price, 0)),
   };
 }
 
@@ -532,12 +548,37 @@ function qtyMarkup(s) {
   `;
 }
 
+/* Selector de horas para los servicios que se cobran por tiempo. */
+function hoursMarkup(s) {
+  return `
+    <div class="qty">
+      <div class="qty__row">
+        <span class="qty__label">
+          ¿Cuántas horas calculas?
+          <em>es una estimación, se ajusta al reservar</em>
+        </span>
+        <div class="qty__control">
+          <button type="button" class="qty__btn" data-hours="${s.id}" data-step="-1"
+            aria-label="Quitar una hora">−</button>
+          <input class="qty__input" type="number" id="hours-${s.id}" data-hours="${s.id}"
+            inputmode="numeric" min="1" max="${MAX_HOURS}" value="${hourCounts[s.id]}"
+            aria-label="Horas de ${esc(s.name)}">
+          <button type="button" class="qty__btn" data-hours="${s.id}" data-step="1"
+            aria-label="Añadir una hora">+</button>
+        </div>
+      </div>
+      <p class="qty__detail" id="hours-detail-${s.id}" aria-live="polite"></p>
+    </div>
+  `;
+}
+
 function serviceMarkup(raw) {
   const s = resolveService(raw, currentSector);
   const isOn = selected.has(s.id);
 
   let priceLabel;
   if (s.unit === 'month') priceLabel = `${euros(s.price)}<span>/mes</span>`;
+  else if (s.unit === 'hour') priceLabel = `${euros(s.price)}<span>/hora</span>`;
   else if (s.unit === 'quote') priceLabel = '<span class="service__quote">A presupuestar</span>';
   else priceLabel = euros(s.price);
 
@@ -561,6 +602,7 @@ function serviceMarkup(raw) {
         <span class="service__price">${priceLabel}</span>
       </label>
       ${s.taggable && isOn ? qtyMarkup(s) : ''}
+      ${s.hourly && isOn ? hoursMarkup(s) : ''}
     </li>
   `;
 }
@@ -601,6 +643,31 @@ function renderQtyDetail() {
 
     detalle.textContent = partes.join(' ');
   });
+}
+
+/** Texto de apoyo del selector de horas. */
+function renderHoursDetail() {
+  SERVICES.filter((s) => s.hourly && selected.has(s.id)).forEach((s) => {
+    const detalle = document.getElementById(`hours-detail-${s.id}`);
+    if (!detalle) return;
+    const h = hourCounts[s.id];
+    detalle.textContent =
+      `${h} ${h === 1 ? 'hora' : 'horas'} × ${euros(s.price)} = ${euros(lineTotal(s))}.`;
+  });
+}
+
+/** Cambia las horas de un servicio sin repintar la lista entera. */
+function setHours(id, valor) {
+  if (!(id in hourCounts)) return;
+
+  const n = Math.min(MAX_HOURS, Math.max(1, Math.round(Number(valor) || 1)));
+  hourCounts[id] = n;
+
+  const input = document.getElementById(`hours-${id}`);
+  if (input && Number(input.value) !== n) input.value = n;
+
+  renderHoursDetail();
+  renderSummary();
 }
 
 function renderServices() {
@@ -648,13 +715,24 @@ function renderSummary() {
     chosen
       .map((s) => {
         // Si el servicio lleva soporte, se dice cuál va incluido en su precio.
-        const incluido = s.taggable
-          ? `<em class="summary__for">incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}</em>`
-          : '';
+        let nota = '';
+        if (s.taggable) {
+          nota = `<em class="summary__for">incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}</em>`;
+        } else if (s.unit === 'hour') {
+          nota = `<em class="summary__for">${hourCounts[s.id]} h × ${euros(s.price)}</em>`;
+        } else if (s.unit === 'quote') {
+          nota = '<em class="summary__for">se presupuesta tras el informe</em>';
+        }
+
+        let importe;
+        if (s.unit === 'month') importe = `${euros(s.price)}/mes`;
+        else if (s.unit === 'quote') importe = '—';
+        else importe = euros(lineTotal(s));
+
         return `
         <li class="summary__item">
-          <span>${esc(s.name)}${incluido}</span>
-          <span class="summary__item-price">${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}</span>
+          <span>${esc(s.name)}${nota}</span>
+          <span class="summary__item-price">${importe}</span>
         </li>`;
       })
       .join('') + lineaEtiquetas;
@@ -741,6 +819,7 @@ function renderScore() {
 function update() {
   renderServices();
   renderQtyDetail();
+  renderHoursDetail();
   renderSummary();
   renderChecklist();
 }
@@ -771,6 +850,12 @@ listEl.addEventListener('change', (event) => {
     return;
   }
 
+  const horas = event.target.closest('input[data-hours]');
+  if (horas) {
+    setHours(horas.dataset.hours, horas.value);
+    return;
+  }
+
   const cantidad = event.target.closest('.qty__input');
   if (cantidad) {
     setTagCount(cantidad.dataset.qty, cantidad.value);
@@ -784,9 +869,11 @@ listEl.addEventListener('change', (event) => {
   else selected.delete(input.value);
 
   // Si el servicio lleva etiquetas, aparece o desaparece su selector.
-  if (serviceById(input.value)?.taggable) renderServices();
+  const cambiado = serviceById(input.value);
+  if (cambiado?.taggable || cambiado?.hourly) renderServices();
 
   renderQtyDetail();
+  renderHoursDetail();
   renderSummary();
   renderChecklist();
 });
@@ -794,12 +881,21 @@ listEl.addEventListener('change', (event) => {
 // Mientras se teclea, para que el precio acompañe sin esperar al blur.
 listEl.addEventListener('input', (event) => {
   const campo = event.target.closest('.qty__input');
-  if (campo) setTagCount(campo.dataset.qty, campo.value);
+  if (!campo) return;
+  if (campo.dataset.hours) setHours(campo.dataset.hours, campo.value);
+  else setTagCount(campo.dataset.qty, campo.value);
 });
 
 listEl.addEventListener('click', (event) => {
   const boton = event.target.closest('.qty__btn');
   if (!boton) return;
+
+  if (boton.dataset.hours) {
+    const id = boton.dataset.hours;
+    setHours(id, hourCounts[id] + Number(boton.dataset.step));
+    return;
+  }
+
   const id = boton.dataset.qty;
   setTagCount(id, tagCounts[id] + Number(boton.dataset.step));
 });
@@ -900,12 +996,20 @@ function buildQuote() {
           <td>
             <strong>${esc(s.name)}</strong>
             <span>${esc(s.desc)}${
-              s.taggable
-                ? ` Incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}.`
+              s.taggable ? ` Incluye 1 × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}.` : ''
+            }${
+              s.unit === 'hour'
+                ? ` Estimadas ${hourCounts[s.id]} h a ${euros(s.price)} la hora.`
                 : ''
             }</span>
           </td>
-          <td class="quote__cell-price">${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}</td>
+          <td class="quote__cell-price">${
+            s.unit === 'month'
+              ? `${euros(s.price)}/mes`
+              : s.unit === 'quote'
+                ? 'A presupuestar'
+                : euros(lineTotal(s))
+          }</td>
         </tr>`
       )
       .join('') + filaEtiquetas;
@@ -1034,7 +1138,12 @@ function buildEmailBody() {
   lineas.push('');
 
   selectedServices().forEach((s) => {
-    lineas.push(`- ${s.name}: ${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}`);
+    let importe;
+    if (s.unit === 'month') importe = `${euros(s.price)}/mes`;
+    else if (s.unit === 'quote') importe = 'a presupuestar';
+    else if (s.unit === 'hour') importe = `${hourCounts[s.id]} h × ${euros(s.price)} = ${euros(lineTotal(s))}`;
+    else importe = euros(s.price);
+    lineas.push(`- ${s.name}: ${importe}`);
   });
 
   taggableServices().forEach((s) => {
