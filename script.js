@@ -29,12 +29,12 @@ const SERVICES = [
     id: 'nfc',
     group: 'nfc',
     name: 'Etiqueta NFC + reseñas en Google',
-    desc: 'Tu página con enlace directo a tus reseñas y la primera tarjeta ya programada. Es la base de todo lo demás.',
+    desc: 'Tu página con enlace directo a tus reseñas y el primer soporte ya programado y puesto. Es la base de todo lo demás.',
     price: 25,
     unit: 'once',
     required: true,
     taggable: true,
-    tagHint: 'donde pides la reseña: barra, salida, junto al datáfono…',
+    tagHint: 'donde pides la reseña: mostrador, salida, con la cuenta…',
   },
   {
     id: 'wifi',
@@ -111,91 +111,89 @@ const SERVICES = [
 ];
 
 /* =========================================================
- * Etiquetas adicionales.
+ * Soportes físicos.
  *
- * El contenido (la carta, el wifi, las reseñas) es el mismo para
- * todas las etiquetas de un negocio: se configura una vez y se
- * replica. Lo único que cuesta por unidad es la tarjeta física, así
- * que a más cantidad, menos precio por etiqueta.
+ * Cada formato tiene su propia escala: no es el mismo producto con un
+ * recargo, son cosas distintas. Una peana de mostrador cuesta lo que
+ * cuesta y se piden de una en una; las tarjetas que se dan con la
+ * cuenta se piden a decenas y ahí sí compensa el volumen.
  *
- * Los tramos son ACUMULATIVOS: cada uno se aplica solo a las unidades
- * que caen dentro de él, como en un IRPF. Si se aplicara el precio del
- * último tramo a todas las unidades, pedir 16 etiquetas saldría más
- * barato que pedir 15, y ese salto absurdo obligaría al cliente a
- * pedir de más para pagar menos.
+ * El primer soporte de cada servicio va incluido en su precio: los
+ * 25 € del servicio de reseñas son, precisamente, el soporte de
+ * mostrador puesto y funcionando. Estas escalas cuentan a partir del
+ * segundo.
  *
- * La primera etiqueta va incluida en el servicio base, así que estos
- * tramos cuentan a partir de la segunda.
+ * `desde` es la cantidad a partir de la cual se aplica ese precio a
+ * TODAS las unidades adicionales, que es como se anuncia de cara al
+ * cliente ("a partir de 25, todas a 5,99").
  * ========================================================= */
 
-/*
- * Formatos físicos. El chip NFC es el mismo en todos; lo que cambia es
- * el soporte, y por eso el suplemento es fijo por unidad y NO baja con
- * el volumen: imprimir muchas tarjetas abarata la tarjeta, pero una
- * peana sigue costando lo que cuesta.
- */
 const TAG_FORMATS = {
-  pegatina: {
-    name: 'Pegatina',
-    desc: 'Adhesiva y discreta. Para el portacuentas, la barra o el cristal.',
-    delta: -2,
+  soporte: {
+    name: 'Soporte de mostrador',
+    desc: 'Peana rígida que se queda de pie en el mostrador o en la mesa. La que ve todo el mundo al entrar.',
+    tiers: [{ desde: 1, precio: 15 }],
   },
   tarjeta: {
-    name: 'Tarjeta',
-    desc: 'Tamaño tarjeta de crédito, rígida. La que se da en mano con la cuenta.',
-    delta: 0,
+    name: 'Tarjeta para la cuenta',
+    desc: 'Tamaño tarjeta de crédito. Para dar en mano al cobrar o dejar en el portacuentas.',
+    tiers: [
+      { desde: 1, precio: 7.99 },
+      { desde: 10, precio: 6.99 },
+      { desde: 25, precio: 5.99 },
+    ],
   },
-  soporte: {
-    name: 'Soporte de mesa',
-    desc: 'Peana rígida que se queda de pie en la mesa o el mostrador.',
-    delta: 7,
+  pegatina: {
+    name: 'Pegatina',
+    desc: 'Adhesiva y discreta, para la barra, la mesa o el cristal.',
+    tiers: [
+      { desde: 1, precio: 5.99 },
+      { desde: 10, precio: 4.99 },
+      { desde: 25, precio: 3.99 },
+    ],
   },
 };
 
-const TAG_TIERS = [
-  { hasta: 4, precio: 6 },      // etiquetas 2 a 5
-  { hasta: 14, precio: 5 },     // etiquetas 6 a 15
-  { hasta: 29, precio: 4 },     // etiquetas 16 a 30
-  { hasta: Infinity, precio: 3 }, // a partir de la 31
-];
-
 const MAX_TAGS = 200;
 
-/** Coste de las etiquetas adicionales, aplicando los tramos por partes. */
-function extraTagsCost(extras) {
-  let restantes = Math.max(0, extras);
-  let acumuladas = 0;
-  let total = 0;
+const redondea = (n) => Math.round(n * 100) / 100;
 
-  for (const tramo of TAG_TIERS) {
-    if (restantes <= 0) break;
-    const cabenEnTramo = tramo.hasta - acumuladas;
-    const enEsteTramo = Math.min(restantes, cabenEnTramo);
-    total += enEsteTramo * tramo.precio;
-    acumuladas += enEsteTramo;
-    restantes -= enEsteTramo;
+/** Precio por unidad que corresponde a esa cantidad. */
+function tierPrice(cantidad, tiers) {
+  let precio = tiers[0].precio;
+  for (const t of tiers) {
+    if (cantidad >= t.desde) precio = t.precio;
   }
-
-  return total;
+  return precio;
 }
 
-/** Precio por unidad de la siguiente etiqueta que se añada. */
-function nextTagPrice(extras) {
-  let acumuladas = 0;
-  for (const tramo of TAG_TIERS) {
-    if (extras < tramo.hasta) return tramo.precio;
-    acumuladas = tramo.hasta;
+/*
+ * Coste de las unidades adicionales de un formato.
+ *
+ * El precio del tramo se aplica a todas las unidades, que es como lo
+ * entiende el cliente, pero eso crea saltos absurdos: 9 tarjetas a
+ * 7,99 son 71,91 € y 10 a 6,99 son 69,90, o sea que pedir menos
+ * costaría más. Por eso nunca se cobra más de lo que costaría pedir la
+ * cantidad del siguiente tramo: al cliente se le aplica siempre el
+ * mejor precio posible.
+ */
+function formatCost(cantidad, tiers) {
+  if (cantidad <= 0) return 0;
+
+  let mejor = cantidad * tierPrice(cantidad, tiers);
+  for (const t of tiers) {
+    if (t.desde > cantidad) {
+      mejor = Math.min(mejor, t.desde * t.precio);
+    }
   }
-  return TAG_TIERS[TAG_TIERS.length - 1].precio;
+  return redondea(mejor);
 }
 
-/** Cuántas etiquetas más hacen falta para entrar en el siguiente tramo. */
-function nextTierInfo(extras) {
-  let acumuladas = 0;
-  for (let i = 0; i < TAG_TIERS.length - 1; i++) {
-    acumuladas = TAG_TIERS[i].hasta;
-    if (extras < acumuladas) {
-      return { faltan: acumuladas - extras, precio: TAG_TIERS[i + 1].precio };
+/** Cuántas unidades más hacen falta para que baje el precio. */
+function nextTierInfo(cantidad, tiers) {
+  for (const t of tiers) {
+    if (t.desde > cantidad) {
+      return { faltan: t.desde - cantidad, precio: t.precio };
     }
   }
   return null;
@@ -384,7 +382,10 @@ const tagFormats = { nfc: 'tarjeta', catalogo: 'soporte' };
 
 /* ---------- helpers ---------- */
 
-const euros = (n) => `${n} €`;
+const euros = (n) => {
+  const v = redondea(n);
+  return `${Number.isInteger(v) ? v : v.toFixed(2).replace('.', ',')} €`;
+};
 const has = (id) => selected.has(id);
 
 function esc(str) {
@@ -419,26 +420,24 @@ function totalTags() {
   return taggableServices().reduce((n, s) => n + tagCounts[s.id], 0);
 }
 
-/*
- * Etiquetas que se cobran aparte. Cada servicio incluye la primera, y
- * el descuento por volumen se calcula sobre el total del pedido: lo
- * que abarata la unidad es imprimir muchas, no en qué se usen.
- */
+/** Unidades adicionales de un servicio: la primera va incluida. */
+function extraTagsOf(id) {
+  return Math.max(0, tagCounts[id] - 1);
+}
+
+/** Unidades adicionales de todos los servicios juntos. */
 function extraTags() {
-  return taggableServices().reduce((n, s) => n + Math.max(0, tagCounts[s.id] - 1), 0);
+  return taggableServices().reduce((n, s) => n + extraTagsOf(s.id), 0);
 }
 
-/** Suplementos de formato, que se cobran por unidad adicional. */
-function formatSupplements() {
-  return taggableServices().reduce(
-    (sum, s) => sum + Math.max(0, tagCounts[s.id] - 1) * TAG_FORMATS[tagFormats[s.id]].delta,
-    0
-  );
+/** Lo que cuestan las unidades adicionales de un servicio. */
+function tagsCostOf(id) {
+  return formatCost(extraTagsOf(id), TAG_FORMATS[tagFormats[id]].tiers);
 }
 
-/** Lo que suman las etiquetas adicionales: volumen más formato. */
+/** Lo que suman los soportes adicionales de todo el pedido. */
 function tagsCost() {
-  return extraTagsCost(extraTags()) + formatSupplements();
+  return redondea(taggableServices().reduce((sum, s) => sum + tagsCostOf(s.id), 0));
 }
 
 function totals() {
@@ -504,10 +503,11 @@ function qtyMarkup(s) {
         ${Object.entries(TAG_FORMATS)
           .map(([key, f]) => {
             const activo = tagFormats[s.id] === key;
-            const extra =
-              f.delta === 0
-                ? 'sin recargo'
-                : `${f.delta > 0 ? '+' : '−'}${Math.abs(f.delta)} € / ud.`;
+            const desde = f.tiers[0].precio;
+            const baja = f.tiers.length > 1 ? f.tiers[f.tiers.length - 1].precio : null;
+            const extra = baja
+              ? `${euros(desde)} / ud. · desde ${euros(baja)} por volumen`
+              : `${euros(desde)} / ud.`;
             return `
               <label class="format${activo ? ' format--on' : ''}" for="fmt-${s.id}-${key}">
                 <input type="radio" id="fmt-${s.id}-${key}" name="fmt-${s.id}"
@@ -520,23 +520,9 @@ function qtyMarkup(s) {
           })
           .join('')}
       </fieldset>
-    </div>
-  `;
-}
 
-/* Resumen del pedido de etiquetas: va una sola vez, porque el
-   descuento se calcula sobre el total de todas juntas. */
-function tagsSummaryMarkup() {
-  return `
-    <li class="tags-summary" id="tags-summary">
-      <p class="tags-summary__detail" id="qty-detail" aria-live="polite"></p>
-      <ul class="qty__tiers">
-        <li><span>2 – 5</span> 6 € / ud.</li>
-        <li><span>6 – 15</span> 5 € / ud.</li>
-        <li><span>16 – 30</span> 4 € / ud.</li>
-        <li><span>31 o más</span> 3 € / ud.</li>
-      </ul>
-    </li>
+      <p class="qty__detail" id="qty-detail-${s.id}" aria-live="polite"></p>
+    </div>
   `;
 }
 
@@ -574,65 +560,52 @@ function serviceMarkup(raw) {
 }
 
 /**
- * Texto de apoyo: qué se lleva en etiquetas y cuántas faltan para el
- * siguiente tramo. Se actualiza solo, sin repintar la lista, para no
- * perder el foco mientras se teclea la cantidad.
+ * Texto de apoyo de cada selector: lo que suman sus soportes y cuántos
+ * faltan para que baje el precio. Se actualiza sin repintar la lista,
+ * para no perder el foco mientras se teclea la cantidad.
  */
 function renderQtyDetail() {
-  const detalle = document.getElementById('qty-detail');
-  if (!detalle) return;
+  taggableServices().forEach((s) => {
+    const detalle = document.getElementById(`qty-detail-${s.id}`);
+    if (!detalle) return;
 
-  const extras = extraTags();
-  const desglose = taggableServices()
-    .map(
-      (s) =>
-        `${tagCounts[s.id]} de ${s.id === 'catalogo' ? 'la carta' : 'reseñas'} ` +
-        `en ${TAG_FORMATS[tagFormats[s.id]].name.toLowerCase()}`
-    )
-    .join(' + ');
+    const formato = TAG_FORMATS[tagFormats[s.id]];
+    const extras = extraTagsOf(s.id);
 
-  if (extras === 0) {
-    detalle.textContent =
-      `${totalTags()} ${totalTags() === 1 ? 'etiqueta' : 'etiquetas'} (${desglose}). ` +
-      'La primera de cada servicio va incluida; a partir de ahí, 6 € cada una.';
-    return;
-  }
+    if (extras === 0) {
+      detalle.textContent =
+        `El primero va incluido en el servicio. ` +
+        `Cada uno de más: ${euros(formato.tiers[0].precio)}.`;
+      return;
+    }
 
-  const coste = tagsCost();
-  const medio = (coste / extras).toFixed(2).replace('.', ',');
-  const siguiente = nextTierInfo(extras);
-  const suplemento = formatSupplements();
+    const coste = tagsCostOf(s.id);
+    const medio = euros(coste / extras);
+    const siguiente = nextTierInfo(extras, formato.tiers);
 
-  const partes = [
-    `${totalTags()} etiquetas en total (${desglose}).`,
-    `${extras} ${extras === 1 ? 'se cobra aparte' : 'se cobran aparte'}: ` +
-      `${euros(coste)} (${medio} € por etiqueta).`,
-  ];
+    const partes = [
+      `${extras} × ${formato.name}: ${euros(coste)} (${medio} cada uno).`,
+    ];
 
-  if (suplemento !== 0) {
-    partes.push(
-      `Incluye ${suplemento > 0 ? '' : 'un ahorro de '}${euros(Math.abs(suplemento))} por el formato.`
-    );
-  }
+    if (siguiente) {
+      partes.push(
+        `Con ${siguiente.faltan} más, todos bajan a ${euros(siguiente.precio)}.`
+      );
+    }
 
-  if (siguiente) {
-    partes.push(`Con ${siguiente.faltan} más, las siguientes bajan a ${euros(siguiente.precio)}.`);
-  }
-
-  detalle.textContent = partes.join(' ');
+    detalle.textContent = partes.join(' ');
+  });
 }
 
 function renderServices() {
   listEl.innerHTML = Object.entries(SERVICE_GROUPS)
     .map(([key, group]) => {
       const items = SERVICES.filter((s) => s.group === key).map(serviceMarkup).join('');
-      // El resumen de etiquetas cierra el grupo NFC, que es donde están.
-      const resumen = key === 'nfc' ? tagsSummaryMarkup() : '';
       return `
         <li class="services__group">
           <p class="services__group-title">${esc(group.label)}</p>
           <p class="services__group-desc">${esc(group.desc)}</p>
-          <ul class="services__items">${items}${resumen}</ul>
+          <ul class="services__items">${items}</ul>
         </li>
       `;
     })
@@ -650,13 +623,17 @@ function renderSummary() {
   const chosen = selectedServices();
   const { once, month } = totals();
 
-  const extras = extraTags();
-  const lineaEtiquetas = extras
-    ? `<li class="summary__item">
-         <span>${extras} ${extras === 1 ? 'etiqueta adicional' : 'etiquetas adicionales'}</span>
-         <span class="summary__item-price">${euros(tagsCost())}</span>
-       </li>`
-    : '';
+  const lineaEtiquetas = taggableServices()
+    .filter((s) => extraTagsOf(s.id) > 0)
+    .map((s) => {
+      const n = extraTagsOf(s.id);
+      // "29 × Tarjeta para la cuenta" evita tener que pluralizar el nombre.
+      return `<li class="summary__item">
+         <span>${n} × ${esc(TAG_FORMATS[tagFormats[s.id]].name)}</span>
+         <span class="summary__item-price">${euros(tagsCostOf(s.id))}</span>
+       </li>`;
+    })
+    .join('');
 
   summaryListEl.innerHTML =
     chosen
@@ -885,18 +862,22 @@ function buildQuote() {
     year: 'numeric',
   });
 
-  const extras = extraTags();
-  const filaEtiquetas = extras
-    ? `<tr>
+  const filaEtiquetas = taggableServices()
+    .filter((s) => extraTagsOf(s.id) > 0)
+    .map((s) => {
+      const n = extraTagsOf(s.id);
+      const f = TAG_FORMATS[tagFormats[s.id]];
+      return `<tr>
          <td>
-           <strong>${extras} ${extras === 1 ? 'etiqueta NFC adicional' : 'etiquetas NFC adicionales'}</strong>
-           <span>Mismo contenido en todas (${esc(SECTORS[currentSector].tagUnit)}).
-             Precio por unidad según tramos de cantidad:
-             ${(tagsCost() / extras).toFixed(2).replace('.', ',')} € de media.</span>
+           <strong>${n} × ${esc(f.name)}</strong>
+           <span>Para ${s.id === 'catalogo' ? 'la carta' : 'las reseñas'}, además del que ya
+             incluye el servicio. Mismo contenido en todos.
+             ${euros(tagsCostOf(s.id) / n)} por unidad.</span>
          </td>
-         <td class="quote__cell-price">${euros(tagsCost())}</td>
-       </tr>`
-    : '';
+         <td class="quote__cell-price">${euros(tagsCostOf(s.id))}</td>
+       </tr>`;
+    })
+    .join('');
 
   const filas =
     chosen
@@ -1039,14 +1020,19 @@ function buildEmailBody() {
     lineas.push(`- ${s.name}: ${s.unit === 'month' ? `${euros(s.price)}/mes` : euros(s.price)}`);
   });
 
-  const extras = extraTags();
-  if (extras) {
-    lineas.push(`- ${extras} etiquetas adicionales: ${euros(tagsCost())}`);
-  }
-  lineas.push('');
-  lineas.push(`Etiquetas en total: ${totalTags()}`);
   taggableServices().forEach((s) => {
-    lineas.push(`  · ${s.id === 'catalogo' ? 'Carta' : 'Reseñas'}: ${tagCounts[s.id]} en ${TAG_FORMATS[tagFormats[s.id]].name.toLowerCase()}`);
+    const n = extraTagsOf(s.id);
+    if (n) {
+      lineas.push(`- ${n} × ${TAG_FORMATS[tagFormats[s.id]].name}: ${euros(tagsCostOf(s.id))}`);
+    }
+  });
+  lineas.push('');
+  lineas.push(`Soportes en total: ${totalTags()}`);
+  taggableServices().forEach((s) => {
+    lineas.push(
+      `  · ${s.id === 'catalogo' ? 'Carta' : 'Reseñas'}: ${tagCounts[s.id]} ` +
+      `en ${TAG_FORMATS[tagFormats[s.id]].name.toLowerCase()}`
+    );
   });
   lineas.push(`Total pago único: ${euros(once)}`);
   if (month > 0) lineas.push(`Cuota mensual: ${euros(month)}/mes`);
