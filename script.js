@@ -364,7 +364,7 @@ const SECURITY_CHECKS = [
   },
 ];
 
-const CONTACTO = 'hola@gertu.es';
+const CONTACTO = 'gertuautomations@gmail.com';
 const NOTA_IVA = 'Precios sin IVA.';
 const VALIDEZ_DIAS = 30;
 
